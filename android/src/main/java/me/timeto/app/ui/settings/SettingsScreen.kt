@@ -717,11 +717,23 @@ fun SettingsScreen(
                 FormButton(
                     title = "Timer Overdue",
                     isFirst = false,
-                    isLast = isLiveUpdatesSystemEnabled.value,
+                    isLast = false,
                     onClick = {
                         openNotificationChannelSettings(
                             context = context,
                             channel = NotificationsUtils.channelTimerOverdue(),
+                        )
+                    },
+                )
+
+                FormButton(
+                    title = "Timer Expired Repeat",
+                    isFirst = false,
+                    isLast = isLiveUpdatesSystemEnabled.value,
+                    onClick = {
+                        openNotificationChannelSettings(
+                            context = context,
+                            channel = NotificationsUtils.channelTimerExpiredRepeat(),
                         )
                     },
                 )
