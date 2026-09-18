@@ -17,6 +17,7 @@ object AlarmCenter {
             NotificationAlarm.Type.TimeToBreak -> NOTIFICATION_ID_BREAK
             NotificationAlarm.Type.Overdue -> NOTIFICATION_ID_OVERDUE
             is NotificationAlarm.Type.NoActivity -> NOTIFICATION_ID_NO_ACTIVITY_START + type.day
+            is NotificationAlarm.Type.ExpiredRepeat -> NotificationAlarm.EXPIRED_REPEAT_REQUEST_CODE_START + type.k
         }
 
         val context = App.instance
@@ -53,7 +54,8 @@ object AlarmCenter {
 
         val requestCodes: List<Int> =
             listOf(NOTIFICATION_ID_BREAK, NOTIFICATION_ID_OVERDUE) +
-                    NotificationsUtils.NOTIFICATION_ID_NO_ACTIVITY_RANGE
+                    NotificationsUtils.NOTIFICATION_ID_NO_ACTIVITY_RANGE +
+                    NotificationsUtils.EXPIRED_REPEAT_REQUEST_CODE_RANGE
         requestCodes.forEach { requestCode ->
             val pIntent = PendingIntent.getBroadcast(
                 context,

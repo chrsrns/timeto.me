@@ -2,6 +2,8 @@ package me.timeto.shared
 
 import kotlinx.coroutines.flow.MutableSharedFlow
 import me.timeto.shared.db.IntervalDb
+import me.timeto.shared.db.KvDb
+import me.timeto.shared.db.KvDb.Companion.asTimerExpiredRepeatSeconds
 
 data class NotificationAlarm(
     val title: String,
@@ -14,6 +16,16 @@ data class NotificationAlarm(
     companion object {
 
         const val NO_ACTIVITY_DAYS_LIMIT = 7
+
+        const val EXPIRED_REPEAT_MAX_K = 48
+        const val EXPIRED_REPEAT_HORIZON_SECONDS = 86_400
+        const val EXPIRED_REPEAT_REQUEST_CODE_START = 200
+        const val EXPIRED_REPEAT_NOTIFICATION_ID = 4
+
+        fun notificationIdForRequestCode(requestCode: Int): Int =
+            if (requestCode in EXPIRED_REPEAT_REQUEST_CODE_START..(EXPIRED_REPEAT_REQUEST_CODE_START + EXPIRED_REPEAT_MAX_K))
+                EXPIRED_REPEAT_NOTIFICATION_ID
+            else requestCode
 
         // Not StateFlow to reschedule same data object
         val flow = MutableSharedFlow<List<NotificationAlarm>>()
@@ -29,7 +41,41 @@ data class NotificationAlarm(
         object TimeToBreak : Type()
         object Overdue : Type()
         data class NoActivity(val day: Int) : Type()
+        data class ExpiredRepeat(val k: Int) : Type()
     }
+}
+
+fun buildExpiredRepeatNotifications(
+    timerType: IntervalDb.TimerType,
+    repeatSeconds: Int,
+    now: Int,
+    liveActivity: LiveActivity,
+): List<NotificationAlarm> {
+
+    if (repeatSeconds <= 0)
+        return emptyList()
+
+    val baseDelay: Int = when (timerType) {
+        is IntervalDb.TimerType.Timer ->
+            maxOf(0, timerType.finishTime - now)
+        is IntervalDb.TimerType.OverdueTimer -> 0
+        is IntervalDb.TimerType.Stopwatch ->
+            return emptyList()
+    }
+
+    return (1..NotificationAlarm.EXPIRED_REPEAT_MAX_K)
+        .filter { (it * repeatSeconds) <= NotificationAlarm.EXPIRED_REPEAT_HORIZON_SECONDS }
+        .map { k -> k to (baseDelay + (k * repeatSeconds)) }
+        .filter { (_, inSeconds) -> inSeconds > 0 }
+        .map { (k, inSeconds) ->
+            NotificationAlarm(
+                title = "Time Is Over ⏰",
+                text = "Overdue by ${(k * repeatSeconds).toTimerHintNote(isShort = false)}",
+                inSeconds = inSeconds,
+                type = NotificationAlarm.Type.ExpiredRepeat(k = k),
+                liveActivity = liveActivity,
+            )
+        }
 }
 
 private suspend fun rescheduleNotifications() {
@@ -55,6 +101,17 @@ private suspend fun rescheduleNotifications() {
             )
         }
     }
+
+    val expiredRepeatSeconds: Int =
+        KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS.selectOrNull().asTimerExpiredRepeatSeconds()
+    notifications.addAll(
+        buildExpiredRepeatNotifications(
+            timerType = timerType,
+            repeatSeconds = expiredRepeatSeconds,
+            now = time(),
+            liveActivity = liveActivity,
+        )
+    )
 
     val oneDaySeconds = 86_400
     (1..NotificationAlarm.NO_ACTIVITY_DAYS_LIMIT).forEach { day ->
