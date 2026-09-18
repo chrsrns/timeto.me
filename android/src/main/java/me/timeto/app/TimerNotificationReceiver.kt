@@ -68,10 +68,10 @@ class TimerNotificationReceiver : BroadcastReceiver() {
                 intent.getStringExtra(EXTRA_LIVE_TITLE) ?: return null
             val liveTime: Int =
                 intent.getIntExtra(EXTRA_LIVE_TIME, 0).takeIf { it > 0 } ?: return null
-            val liveIsCountUpOrDown: Boolean =
+            val liveIsTimerOrStopwatch: Boolean =
                 intent.getBooleanExtra(EXTRA_LIVE_IS_TIMER_OR_STOPWATCH, true)
 
-            if (liveIsCountUpOrDown) {
+            if (!liveIsTimerOrStopwatch) {
                 return LiveUpdatesUtils.LiveData.Stopwatch(
                     title = liveTitle,
                     startTime = liveTime,
