@@ -15,9 +15,14 @@ android {
         targetSdk = 36
         versionCode = 623
         versionName = "2026.09.11"
+        manifestPlaceholders["appLabel"] = "timeto.me"
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["appLabel"] = "timeto.me debug"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

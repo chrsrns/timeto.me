@@ -15,7 +15,7 @@
     <application
         android:name=".App"
         android:icon="@mipmap/ic_launcher"
-        android:label="timeto.me"
+        android:label="${appLabel}"
         android:supportsRtl="true"
         android:theme="@style/Theme.Timetome">
 
