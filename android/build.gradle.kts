@@ -10,7 +10,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "me.timeto.app"
+        applicationId = "chrsrns.timetome.forkapp"
         minSdk = 31
         targetSdk = 36
         versionCode = 623
