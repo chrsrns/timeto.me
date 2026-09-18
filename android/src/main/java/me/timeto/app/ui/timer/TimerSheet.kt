@@ -27,6 +27,7 @@ import me.timeto.app.ui.Screen
 import me.timeto.app.ui.header.sheet.HeaderSheet
 import me.timeto.app.ui.header.sheet.HeaderSheetButton
 import me.timeto.app.ui.navigation.LocalNavigationLayer
+import me.timeto.app.ui.roundedShape
 import me.timeto.app.ui.squircleShape
 import me.timeto.shared.vm.timer_picker.TimerPickerVm
 
@@ -37,6 +38,7 @@ fun TimerSheet(
     initSeconds: Int,
     hints: List<Int>,
     onDone: (Int) -> Unit,
+    onOff: (() -> Unit)? = null,
 ) {
 
     val navigationLayer = LocalNavigationLayer.current
@@ -103,6 +105,22 @@ fun TimerSheet(
                             value = formTimeItemIdx.value // Set last
                         }
                     }
+                )
+            }
+
+            if (onOff != null) {
+                Text(
+                    text = "Off",
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                        .clip(roundedShape)
+                        .clickable {
+                            onOff()
+                            navigationLayer.close()
+                        }
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    fontWeight = FontWeight.SemiBold,
+                    color = c.red,
                 )
             }
 

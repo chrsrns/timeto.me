@@ -13,6 +13,7 @@ import me.timeto.shared.UnixTime
 import me.timeto.shared.db.ChecklistDb
 import me.timeto.shared.db.KvDb
 import me.timeto.shared.db.KvDb.Companion.asDayStartOffsetSeconds
+import me.timeto.shared.db.KvDb.Companion.asTimerExpiredRepeatSeconds
 import me.timeto.shared.db.KvDb.Companion.isSendingReports
 import me.timeto.shared.db.ShortcutDb
 import me.timeto.shared.launchExIo
@@ -42,6 +43,7 @@ class SettingsVm : Vm<SettingsVm.State>() {
         val noteFoldersDb: List<NoteFolderDb>,
         val isZenModeEnabled: Boolean,
         val dayStartSeconds: Int,
+        val timerExpiredRepeatSeconds: Int,
         val feedbackSubject: String,
         val autoBackupTimeString: String,
         val privacyEmoji: String?,
@@ -58,6 +60,9 @@ class SettingsVm : Vm<SettingsVm.State>() {
         val supportTheDeveloperGitHubTitle = "Star on GitHub"
 
         val dayStartNote: String = dayStartSecondsToString(dayStartSeconds)
+        val timerExpiredRepeatNote: String =
+            if (timerExpiredRepeatSeconds <= 0) "Off"
+            else timerExpiredRepeatSeconds.toTimerHintNote(isShort = false)
         val dayStartListItems = (-10..10).map { hour ->
             DayStartOffsetListItem(
                 seconds = hour * 3_600,
@@ -85,6 +90,7 @@ class SettingsVm : Vm<SettingsVm.State>() {
             noteFoldersDb = Cache.noteFoldersDb,
             isZenModeEnabled = KvDb.KEY.ZEN_MODE_ENABLED.selectOrNullCached().isZenModeEnabled(),
             dayStartSeconds = DayStartOffsetUtils.getOffsetSecondsCached(),
+            timerExpiredRepeatSeconds = KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS.selectOrNullCached().asTimerExpiredRepeatSeconds(),
             feedbackSubject = DEFAULT_FEEDBACK_SUBJECT,
             autoBackupTimeString = prepAutoBackupTimeString(AutoBackup.lastTimeCache.value),
             privacyEmoji = KvDb.KEY.IS_SENDING_REPORTS.selectOrNullCached().privacyEmojiOrNull(),
@@ -102,6 +108,7 @@ class SettingsVm : Vm<SettingsVm.State>() {
             KvDb.KEY.IS_SENDING_REPORTS.selectOrNullFlow(),
             AutoBackup.lastTimeCache,
             KvDb.KEY.FEEDBACK_SUBJECT.selectStringOrNullFlow(),
+            KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS.selectOrNullFlow(),
         ) { activitiesDb: List<ActivityDb>,
             checklistsDb: List<ChecklistDb>,
             shortcutsDb: List<ShortcutDb>,
@@ -109,7 +116,8 @@ class SettingsVm : Vm<SettingsVm.State>() {
             dayStartOffsetSeconds: KvDb?,
             isSendingReports: KvDb?,
             autoBackupLastTime: UnixTime?,
-            feedbackSubject: String? ->
+            feedbackSubject: String?,
+            timerExpiredRepeatSeconds: KvDb? ->
             state.update {
                 it.copy(
                     activitiesUi = ActivityUi.buildList(activitiesDb),
@@ -117,6 +125,7 @@ class SettingsVm : Vm<SettingsVm.State>() {
                     shortcutsDb = shortcutsDb,
                     noteFoldersDb = noteFoldersDb,
                     dayStartSeconds = dayStartOffsetSeconds.asDayStartOffsetSeconds(),
+                    timerExpiredRepeatSeconds = timerExpiredRepeatSeconds.asTimerExpiredRepeatSeconds(),
                     privacyEmoji = isSendingReports.privacyEmojiOrNull(),
                     autoBackupTimeString = prepAutoBackupTimeString(autoBackupLastTime),
                     feedbackSubject = feedbackSubject ?: DEFAULT_FEEDBACK_SUBJECT,
@@ -134,6 +143,12 @@ class SettingsVm : Vm<SettingsVm.State>() {
     fun setDayStartOffsetSeconds(seconds: Int) {
         launchExIo {
             KvDb.KEY.DAY_START_OFFSET_SECONDS.upsertInt(seconds)
+        }
+    }
+
+    fun setTimerExpiredRepeatSeconds(seconds: Int) {
+        launchExIo {
+            KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS.upsertInt(seconds)
         }
     }
 
