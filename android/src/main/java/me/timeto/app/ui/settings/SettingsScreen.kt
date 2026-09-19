@@ -604,7 +604,7 @@ fun SettingsScreen(
                 FormButton(
                     title = "Day Start",
                     isFirst = false,
-                    isLast = true,
+                    isLast = false,
                     note = state.dayStartNote,
                     withArrow = true,
                     onClick = {
@@ -612,6 +612,30 @@ fun SettingsScreen(
                             SettingsDayStartFs(
                                 vm = vm,
                                 state = state,
+                            )
+                        }
+                    },
+                )
+
+                FormButton(
+                    title = "Repeat Expired Timer",
+                    isFirst = false,
+                    isLast = true,
+                    note = state.timerExpiredRepeatNote,
+                    withArrow = true,
+                    onClick = {
+                        navigationFs.push {
+                            TimerSheet(
+                                title = "Repeat Expired Timer",
+                                doneTitle = "Done",
+                                initSeconds = maxOf(state.timerExpiredRepeatSeconds, 60),
+                                hints = listOf(),
+                                onDone = { seconds ->
+                                    vm.setTimerExpiredRepeatSeconds(seconds)
+                                },
+                                onOff = {
+                                    vm.setTimerExpiredRepeatSeconds(0)
+                                },
                             )
                         }
                     },
@@ -693,11 +717,23 @@ fun SettingsScreen(
                 FormButton(
                     title = "Timer Overdue",
                     isFirst = false,
-                    isLast = isLiveUpdatesSystemEnabled.value,
+                    isLast = false,
                     onClick = {
                         openNotificationChannelSettings(
                             context = context,
                             channel = NotificationsUtils.channelTimerOverdue(),
+                        )
+                    },
+                )
+
+                FormButton(
+                    title = "Timer Expired Repeat",
+                    isFirst = false,
+                    isLast = isLiveUpdatesSystemEnabled.value,
+                    onClick = {
+                        openNotificationChannelSettings(
+                            context = context,
+                            channel = NotificationsUtils.channelTimerExpiredRepeat(),
                         )
                     },
                 )

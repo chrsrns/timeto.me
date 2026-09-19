@@ -8,6 +8,7 @@ struct TimerSheet: View {
     let initSeconds: Int
     let hints: [Int]
     let onDone: (Int) -> Void
+    let onOff: (() -> Void)? = nil
 
     var body: some View {
         VmView({
@@ -21,6 +22,7 @@ struct TimerSheet: View {
                 title: title,
                 doneTitle: doneTitle,
                 onDone: onDone,
+                onOff: onOff,
                 hintsUi: state.hintsUi,
                 pickerItemsUi: state.pickerItemsUi,
                 selected: initSeconds.toInt32()
@@ -34,6 +36,7 @@ private struct TimerSheetInner: View {
     let title: String
     let doneTitle: String
     let onDone: (Int) -> Void
+    let onOff: (() -> Void)?
     let hintsUi: [TimerPickerVm.HintUi]
     let pickerItemsUi: [TimerPickerVm.PickerItemUi]
     
@@ -57,6 +60,16 @@ private struct TimerSheetInner: View {
             .pickerStyle(.wheel)
             .foregroundColor(.primary)
             .padding(.bottom, 5)
+            
+            if let onOff = onOff {
+                Button("Off") {
+                    onOff()
+                    dismiss()
+                }
+                .foregroundColor(.red)
+                .fontWeight(.semibold)
+                .padding(.bottom, 8)
+            }
             
             Spacer()
             

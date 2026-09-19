@@ -21,11 +21,17 @@ object NotificationsUtils {
     const val NOTIFICATION_ID_BREAK = 1
     const val NOTIFICATION_ID_OVERDUE = 2
     const val NOTIFICATION_ID_LIVE_UPDATE = 3
+    const val NOTIFICATION_ID_EXPIRED_REPEAT = NotificationAlarm.EXPIRED_REPEAT_NOTIFICATION_ID
 
     // region NO_ACTIVITY
     const val NOTIFICATION_ID_NO_ACTIVITY_START = 100
     val NOTIFICATION_ID_NO_ACTIVITY_RANGE: IntRange =
         NOTIFICATION_ID_NO_ACTIVITY_START..(NOTIFICATION_ID_NO_ACTIVITY_START + NotificationAlarm.NO_ACTIVITY_DAYS_LIMIT)
+    // endregion
+
+    // region EXPIRED_REPEAT
+    val EXPIRED_REPEAT_REQUEST_CODE_RANGE: IntRange =
+        NotificationAlarm.EXPIRED_REPEAT_REQUEST_CODE_START..(NotificationAlarm.EXPIRED_REPEAT_REQUEST_CODE_START + NotificationAlarm.EXPIRED_REPEAT_MAX_K)
     // endregion
 
     val manager: NotificationManager =
@@ -36,6 +42,9 @@ object NotificationsUtils {
 
     fun channelTimerOverdue(): NotificationChannel =
         upsertChannel("timer_overdue", "Timer Overdue", null)
+
+    fun channelTimerExpiredRepeat(): NotificationChannel =
+        upsertChannel("timer_expired_repeat", "Timer Expired Repeat", null)
 
     fun channelLiveUpdates(): NotificationChannel {
         // IMPORTANCE_DEFAULT is obligatory for live updates
@@ -79,6 +88,7 @@ object NotificationsUtils {
     fun cleanTimerPushes() {
         manager.cancel(NOTIFICATION_ID_BREAK)
         manager.cancel(NOTIFICATION_ID_OVERDUE)
+        manager.cancel(NOTIFICATION_ID_EXPIRED_REPEAT)
         NOTIFICATION_ID_NO_ACTIVITY_RANGE.forEach { id ->
             manager.cancel(id)
         }

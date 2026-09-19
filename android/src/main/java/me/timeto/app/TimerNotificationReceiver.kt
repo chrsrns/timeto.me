@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import me.timeto.shared.LiveActivity
+import me.timeto.shared.NotificationAlarm
 import me.timeto.shared.launchExIo
 import me.timeto.shared.reportApi
 import kotlin.time.Duration.Companion.milliseconds
@@ -133,6 +134,14 @@ class TimerNotificationReceiver : BroadcastReceiver() {
                 )
             }
 
+            in NotificationsUtils.EXPIRED_REPEAT_REQUEST_CODE_RANGE -> {
+                Triple(
+                    R.drawable.readme_notification_alarm,
+                    0x0055FF,
+                    NotificationsUtils.channelTimerExpiredRepeat(),
+                )
+            }
+
             else -> {
                 reportApi("TimerNotificationReceiver invalid request code $requestCode")
                 throw Exception()
@@ -147,7 +156,7 @@ class TimerNotificationReceiver : BroadcastReceiver() {
             .setContentIntent(pIntent)
             .build()
 
-        manager.notify(requestCode, notification)
+        manager.notify(NotificationAlarm.notificationIdForRequestCode(requestCode), notification)
 
         // No matter if Live Updates disabled in app settings,
         // it will look like normal push replacement.

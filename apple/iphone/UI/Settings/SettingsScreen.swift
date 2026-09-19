@@ -405,6 +405,32 @@ private struct SettingsScreenInner: View {
                     }
                 )
                 
+                NavigationLinkSheet(
+                    label: {
+                        HStack {
+                            Text("Repeat Expired Timer")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Text(state.timerExpiredRepeatNote)
+                                .foregroundColor(.secondary)
+                        }
+                    },
+                    sheet: {
+                        TimerSheet(
+                            title: "Repeat Expired Timer",
+                            doneTitle: "Done",
+                            initSeconds: max(Int(state.timerExpiredRepeatSeconds), 60),
+                            hints: [],
+                            onDone: { seconds in
+                                vm.setTimerExpiredRepeatSeconds(seconds: seconds.toInt32())
+                            },
+                            onOff: {
+                                vm.setTimerExpiredRepeatSeconds(seconds: 0)
+                            }
+                        )
+                    }
+                )
+                
                 if !isLiveActivityGranted {
                     HStack {
                         Text("Live Activities Not Granted")

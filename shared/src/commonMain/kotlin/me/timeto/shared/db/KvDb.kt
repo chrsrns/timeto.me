@@ -60,6 +60,11 @@ data class KvDb(
         fun KvDb?.isZenModeEnabled(): Boolean =
             this?.value?.toBoolean10() ?: true
 
+        fun KvDb?.asTimerExpiredRepeatSeconds(): Int {
+            val seconds: Int = this?.value?.toIntOrNull() ?: return 0
+            return if (seconds >= 60 && seconds % 60 == 0) seconds else 0
+        }
+
         suspend fun upsertIsSendingReports(isSendingReports: Boolean) {
             val time: Int = if (isSendingReports) time() else (-time())
             KEY.IS_SENDING_REPORTS.upsertInt(time)
@@ -95,7 +100,8 @@ data class KvDb(
         ZEN_MODE_ENABLED,
         ZEN_MODE_CHECKLISTS_VISIBILITY,
         DOC_FORCE_READ_TIME,
-        IOS_WIDGET_UPDATE_ID;
+        IOS_WIDGET_UPDATE_ID,
+        TIMER_EXPIRED_REPEAT_SECONDS;
 
         // selectOrNull..
 

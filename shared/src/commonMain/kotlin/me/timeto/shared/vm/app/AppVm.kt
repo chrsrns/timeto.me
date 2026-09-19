@@ -84,6 +84,12 @@ class AppVm : Vm<AppVm.State>() {
                     keepScreenOnStateFlow.emit(lastIntervalDb.selectActivityDb().keepScreenOn)
                 }
 
+            KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS
+                .selectOrNullFlow()
+                .onEachExIn(this) {
+                    NotificationAlarm.rescheduleAll()
+                }
+
             DayStartOffsetUtils.buildTodayFlow().onEachExIn(this) { todayWithDayStartOffset ->
                 ChecklistDb.selectAsc().forEach { checklistDb ->
                     checklistDb.resetIfNeeded(todayWithDayStartOffset = todayWithDayStartOffset)
