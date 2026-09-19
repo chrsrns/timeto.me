@@ -34,7 +34,7 @@ class NotificationIdMappingTest {
     }
 
     @Test
-    fun constants_matchSpec() {
+    fun constants_expectedValues() {
         assertEquals(48, NotificationAlarm.EXPIRED_REPEAT_MAX_K)
         assertEquals(200, NotificationAlarm.EXPIRED_REPEAT_REQUEST_CODE_START)
         assertEquals(4, NotificationAlarm.EXPIRED_REPEAT_NOTIFICATION_ID)

@@ -8,7 +8,7 @@ struct TimerSheet: View {
     let initSeconds: Int
     let hints: [Int]
     let onDone: (Int) -> Void
-    var onOff: (() -> Void)? = nil
+    let onOff: (() -> Void)? = nil
 
     var body: some View {
         VmView({

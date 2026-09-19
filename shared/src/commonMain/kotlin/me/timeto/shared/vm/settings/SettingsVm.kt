@@ -60,15 +60,15 @@ class SettingsVm : Vm<SettingsVm.State>() {
         val supportTheDeveloperGitHubTitle = "Star on GitHub"
 
         val dayStartNote: String = dayStartSecondsToString(dayStartSeconds)
-        val timerExpiredRepeatNote: String =
-            if (timerExpiredRepeatSeconds <= 0) "Off"
-            else timerExpiredRepeatSeconds.toTimerHintNote(isShort = false)
         val dayStartListItems = (-10..10).map { hour ->
             DayStartOffsetListItem(
                 seconds = hour * 3_600,
                 note = dayStartSecondsToString(hour * 3_600)
             )
         }
+        val timerExpiredRepeatNote: String =
+            if (timerExpiredRepeatSeconds <= 0) "Off"
+            else timerExpiredRepeatSeconds.toTimerHintNote(isShort = false)
 
         val infoText: String = run {
             val systemInfo = SystemInfo.instance

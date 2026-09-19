@@ -628,7 +628,7 @@ fun SettingsScreen(
                             TimerSheet(
                                 title = "Repeat Expired Timer",
                                 doneTitle = "Done",
-                                initSeconds = if (state.timerExpiredRepeatSeconds >= 60) state.timerExpiredRepeatSeconds else 60,
+                                initSeconds = maxOf(state.timerExpiredRepeatSeconds, 60),
                                 hints = listOf(),
                                 onDone = { seconds ->
                                     vm.setTimerExpiredRepeatSeconds(seconds)

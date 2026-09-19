@@ -405,23 +405,7 @@ private struct SettingsScreenInner: View {
                     }
                 )
                 
-                Button(
-                    action: {
-                        navigation.sheet {
-                            TimerSheet(
-                                title: "Repeat Expired Timer",
-                                doneTitle: "Done",
-                                initSeconds: state.timerExpiredRepeatSeconds >= 60 ? Int(state.timerExpiredRepeatSeconds) : 60,
-                                hints: [],
-                                onDone: { seconds in
-                                    vm.setTimerExpiredRepeatSeconds(seconds: seconds.toInt32())
-                                },
-                                onOff: {
-                                    vm.setTimerExpiredRepeatSeconds(seconds: 0)
-                                }
-                            )
-                        }
-                    },
+                NavigationLinkSheet(
                     label: {
                         HStack {
                             Text("Repeat Expired Timer")
@@ -430,6 +414,20 @@ private struct SettingsScreenInner: View {
                             Text(state.timerExpiredRepeatNote)
                                 .foregroundColor(.secondary)
                         }
+                    },
+                    sheet: {
+                        TimerSheet(
+                            title: "Repeat Expired Timer",
+                            doneTitle: "Done",
+                            initSeconds: max(Int(state.timerExpiredRepeatSeconds), 60),
+                            hints: [],
+                            onDone: { seconds in
+                                vm.setTimerExpiredRepeatSeconds(seconds: seconds.toInt32())
+                            },
+                            onOff: {
+                                vm.setTimerExpiredRepeatSeconds(seconds: 0)
+                            }
+                        )
                     }
                 )
                 
