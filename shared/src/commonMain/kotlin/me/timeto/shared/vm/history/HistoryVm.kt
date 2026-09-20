@@ -178,7 +178,7 @@ class HistoryVm : Vm<HistoryVm.State>() {
 
 ///
 
-private fun makePeriodString(
+internal fun makePeriodString(
     seconds: Int,
 ): String {
     if (seconds < 60)
