@@ -301,6 +301,52 @@ class RepeatingPeriodTest {
             Cache.kvDb = emptyList()
         }
     }
+
+    // isInDay
+
+    @Test
+    fun isInDay_everyNDays_moduloMatch() {
+        val repeating = testRepeatingDb(last_day = 100, type_id = 1, value = "3")
+        assertTrue(repeating.isInDay(100))
+        assertTrue(repeating.isInDay(103))
+        assertTrue(repeating.isInDay(97))
+        assertFalse(repeating.isInDay(101))
+        assertFalse(repeating.isInDay(99))
+    }
+
+    @Test
+    fun isInDay_daysOfWeek_weekdayMatch() {
+        // dayOfWeek() 0=Mon..6=Sun; 2026-09-18 is Friday (4)
+        val repeating = testRepeatingDb(last_day = 0, type_id = 2, value = "4")
+        assertTrue(repeating.isInDay(epochDay(2026, 9, 18)))
+        assertFalse(repeating.isInDay(epochDay(2026, 9, 19)))
+        assertFalse(repeating.isInDay(epochDay(2026, 9, 17)))
+    }
+
+    @Test
+    fun isInDay_daysOfMonth_dayAndLastDaySentinel() {
+        val on15th = testRepeatingDb(last_day = 0, type_id = 3, value = "15")
+        assertTrue(on15th.isInDay(epochDay(2026, 9, 15)))
+        assertTrue(on15th.isInDay(epochDay(2026, 10, 15)))
+        assertFalse(on15th.isInDay(epochDay(2026, 9, 16)))
+
+        val lastDay = testRepeatingDb(last_day = 0, type_id = 3, value = "0")
+        assertTrue(lastDay.isInDay(epochDay(2026, 9, 30)))
+        assertTrue(lastDay.isInDay(epochDay(2026, 10, 31)))
+        assertTrue(lastDay.isInDay(epochDay(2026, 2, 28)))
+        assertFalse(lastDay.isInDay(epochDay(2026, 9, 29)))
+        assertFalse(lastDay.isInDay(epochDay(2026, 10, 30)))
+    }
+
+    @Test
+    fun isInDay_daysOfYear_monthDayMatch() {
+        val repeating = testRepeatingDb(last_day = 0, type_id = 4, value = "9.20,12.25")
+        assertTrue(repeating.isInDay(epochDay(2026, 9, 20)))
+        assertTrue(repeating.isInDay(epochDay(2027, 9, 20)))
+        assertTrue(repeating.isInDay(epochDay(2026, 12, 25)))
+        assertFalse(repeating.isInDay(epochDay(2026, 9, 21)))
+        assertFalse(repeating.isInDay(epochDay(2026, 12, 24)))
+    }
 }
 
 private fun testRepeatingDb(
