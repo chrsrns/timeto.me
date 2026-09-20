@@ -533,7 +533,7 @@ private fun RepeatingSQ.toDb() = RepeatingDb(
 )
 
 @Throws(UiException::class)
-private fun validateTextEx(text: String): String {
+internal fun validateTextEx(text: String): String {
     val validatedText: String = text.trim()
     if (validatedText.isEmpty())
         throw UiException("Empty text")
