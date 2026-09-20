@@ -22,6 +22,32 @@ class NoteLogicTest {
             testNoteFolderDb(symbol_raw = "icon--book").symbolOrDefault(),
         )
     }
+
+    @Test
+    fun buildTitle_firstLineOnly() {
+        assertEquals(
+            "first",
+            testNoteDb(text = "first\nsecond\nthird").buildTitle(),
+        )
+    }
+
+    @Test
+    fun buildTitle_trimsWhitespace() {
+        assertEquals(
+            "padded",
+            testNoteDb(text = "  padded  \nrest").buildTitle(),
+        )
+        assertEquals(
+            "single",
+            testNoteDb(text = "single   ").buildTitle(),
+        )
+    }
+
+    @Test
+    fun buildTitle_edgeCases() {
+        assertEquals("", testNoteDb(text = "").buildTitle())
+        assertEquals("", testNoteDb(text = "\nleading newline").buildTitle())
+    }
 }
 
 private fun testNoteFolderDb(
