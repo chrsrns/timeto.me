@@ -55,6 +55,47 @@ class RepeatingPeriodTest {
         assertEquals("Mon Wed", period.title)
         assertEquals(RepeatingDb.TYPE.DAYS_OF_WEEK, period.type)
     }
+
+    @Test
+    fun daysOfMonth_empty_throws() {
+        val e = assertFailsWith<UiException> {
+            RepeatingDb.Period.DaysOfMonth(emptySet())
+        }
+        assertEquals("DaysOfMonth no days selected.", e.uiMessage)
+    }
+
+    @Test
+    fun daysOfMonth_outOfRange_throws() {
+        // Valid range is 0..MAX_DAY_OF_MONTH(27); 0 = LAST_DAY_OF_MONTH
+        listOf(setOf(28), setOf(-1), setOf(1, 99)).forEach { days ->
+            val e = assertFailsWith<UiException>("days=$days") {
+                RepeatingDb.Period.DaysOfMonth(days)
+            }
+            assertEquals("DaysOfMonth invalid data.", e.uiMessage)
+        }
+    }
+
+    @Test
+    fun daysOfMonth_valid_boundariesAndTitle() {
+        assertEquals("0", RepeatingDb.Period.DaysOfMonth(setOf(0)).value)
+        assertEquals(
+            "Last day of month",
+            RepeatingDb.Period.DaysOfMonth(setOf(0)).title,
+        )
+        assertEquals(
+            "1st of each month",
+            RepeatingDb.Period.DaysOfMonth(setOf(1)).title,
+        )
+        assertEquals(
+            "1st, 15th",
+            RepeatingDb.Period.DaysOfMonth(setOf(1, 15)).title,
+        )
+        assertEquals(
+            "1st, Last day",
+            RepeatingDb.Period.DaysOfMonth(setOf(0, 1)).title,
+        )
+        assertEquals(RepeatingDb.TYPE.DAYS_OF_MONTH, RepeatingDb.Period.DaysOfMonth(setOf(1)).type)
+    }
 }
 
 private fun testRepeatingDb(
