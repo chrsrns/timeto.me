@@ -129,6 +129,47 @@ class RepeatingPeriodTest {
         assertEquals("15 Apr, 19 Jan", period.title)
         assertEquals(RepeatingDb.TYPE.DAYS_OF_YEAR, period.type)
     }
+
+    @Test
+    fun periodBuild_decodesAllKinds() {
+        val everyNDays = RepeatingDb.Period.build(1, "3")
+        assertIs<RepeatingDb.Period.EveryNDays>(everyNDays)
+        assertEquals(3, everyNDays.nDays)
+
+        val daysOfWeek = RepeatingDb.Period.build(2, "0,2,4")
+        assertIs<RepeatingDb.Period.DaysOfWeek>(daysOfWeek)
+        assertEquals(setOf(0, 2, 4), daysOfWeek.weekDays)
+
+        val daysOfMonth = RepeatingDb.Period.build(3, "1,15")
+        assertIs<RepeatingDb.Period.DaysOfMonth>(daysOfMonth)
+        assertEquals(setOf(1, 15), daysOfMonth.days)
+
+        val daysOfYear = RepeatingDb.Period.build(4, "1.19,4.15")
+        assertIs<RepeatingDb.Period.DaysOfYear>(daysOfYear)
+        assertEquals(
+            listOf(
+                RepeatingDb.Period.DaysOfYear.MonthDayItem(1, 19),
+                RepeatingDb.Period.DaysOfYear.MonthDayItem(4, 15),
+            ),
+            daysOfYear.items,
+        )
+    }
+
+    @Test
+    fun periodBuild_valueRoundtrip() {
+        listOf(
+            RepeatingDb.Period.EveryNDays(3),
+            RepeatingDb.Period.DaysOfWeek(setOf(0, 2)),
+            RepeatingDb.Period.DaysOfMonth(setOf(0, 15)),
+            RepeatingDb.Period.DaysOfYear(
+                listOf(RepeatingDb.Period.DaysOfYear.MonthDayItem(1, 19)),
+            ),
+        ).forEach { period ->
+            val rebuilt = RepeatingDb.Period.build(period.type.id, period.value)
+            assertEquals(period.type, rebuilt.type)
+            assertEquals(period.value, rebuilt.value, "period=$period")
+        }
+    }
 }
 
 private fun testRepeatingDb(
