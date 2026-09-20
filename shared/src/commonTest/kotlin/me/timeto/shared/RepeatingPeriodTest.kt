@@ -170,6 +170,74 @@ class RepeatingPeriodTest {
             assertEquals(period.value, rebuilt.value, "period=$period")
         }
     }
+
+    // getNextDay
+
+    @Test
+    fun getNextDay_everyNDays_addsInterval() {
+        assertEquals(
+            103,
+            testRepeatingDb(last_day = 100, type_id = 1, value = "3").getNextDay(),
+        )
+        assertEquals(
+            101,
+            testRepeatingDb(last_day = 100, type_id = 1, value = "1").getNextDay(),
+        )
+    }
+
+    @Test
+    fun getNextDay_daysOfWeek_findsNextMatching() {
+        // localDay 0 is Thursday (dayOfWeek() = 3)
+        assertEquals(
+            1,
+            testRepeatingDb(last_day = 0, type_id = 2, value = "4").getNextDay(),
+        )
+        assertEquals(
+            7,
+            testRepeatingDb(last_day = 0, type_id = 2, value = "3").getNextDay(),
+        )
+        assertEquals(
+            6,
+            testRepeatingDb(last_day = 0, type_id = 2, value = "2,3").getNextDay(),
+        )
+    }
+
+    @Test
+    fun getNextDay_daysOfMonth_sameOrNextMonth() {
+        assertEquals(
+            epochDay(2026, 9, 15),
+            testRepeatingDb(last_day = epochDay(2026, 9, 10), type_id = 3, value = "15").getNextDay(),
+        )
+        assertEquals(
+            epochDay(2026, 10, 15),
+            testRepeatingDb(last_day = epochDay(2026, 9, 15), type_id = 3, value = "15").getNextDay(),
+        )
+    }
+
+    @Test
+    fun getNextDay_daysOfMonth_lastDaySentinel() {
+        // day 0 = last day of month
+        assertEquals(
+            epochDay(2026, 9, 30),
+            testRepeatingDb(last_day = epochDay(2026, 9, 10), type_id = 3, value = "0").getNextDay(),
+        )
+        assertEquals(
+            epochDay(2026, 10, 31),
+            testRepeatingDb(last_day = epochDay(2026, 9, 30), type_id = 3, value = "0").getNextDay(),
+        )
+    }
+
+    @Test
+    fun getNextDay_daysOfYear_sameOrNextYear() {
+        assertEquals(
+            epochDay(2026, 9, 20),
+            testRepeatingDb(last_day = epochDay(2026, 9, 19), type_id = 4, value = "9.20").getNextDay(),
+        )
+        assertEquals(
+            epochDay(2027, 9, 20),
+            testRepeatingDb(last_day = epochDay(2026, 9, 20), type_id = 4, value = "9.20").getNextDay(),
+        )
+    }
 }
 
 private fun testRepeatingDb(
