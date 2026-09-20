@@ -186,7 +186,56 @@ class ActivityLogicTest {
             testActivityDb(timer_hints = "45").buildTimerHintsOrDefault(),
         )
     }
+
+    // nextColorCached
+
+    @Test
+    fun nextColorCached_emptyCache_returnsFirstPaletteColor() {
+        try {
+            Cache.activitiesDb = emptyList()
+            assertEquals("52,199,89,255", ActivityDb.nextColorCached().toRgbaString())
+        } finally {
+            Cache.activitiesDb = emptyList()
+        }
+    }
+
+    @Test
+    fun nextColorCached_firstColorUsed_returnsNextUnused() {
+        try {
+            Cache.activitiesDb = listOf(testActivityDb(color_rgba = "52,199,89,255"))
+            assertEquals("0,122,255,255", ActivityDb.nextColorCached().toRgbaString())
+
+            Cache.activitiesDb = listOf(
+                testActivityDb(id = 1, color_rgba = "52,199,89,255"),
+                testActivityDb(id = 2, color_rgba = "0,122,255,255"),
+            )
+            assertEquals("255,59,48,255", ActivityDb.nextColorCached().toRgbaString())
+        } finally {
+            Cache.activitiesDb = emptyList()
+        }
+    }
+
+    @Test
+    fun nextColorCached_allColorsUsed_returnsPaletteMember() {
+        try {
+            Cache.activitiesDb = paletteRgbaStrings.mapIndexed { idx, rgba ->
+                testActivityDb(id = idx + 1, color_rgba = rgba)
+            }
+            val picked = ActivityDb.nextColorCached().toRgbaString()
+            assertTrue(picked in paletteRgbaStrings, "picked=$picked")
+        } finally {
+            Cache.activitiesDb = emptyList()
+        }
+    }
 }
+
+// Palette order from ActivityDb.colors (private there, mirrored here).
+private val paletteRgbaStrings = listOf(
+    "52,199,89,255", "0,122,255,255", "255,59,48,255", "255,204,0,255",
+    "175,82,222,255", "255,149,0,255", "48,176,199,255", "88,86,214,255",
+    "96,125,139,255", "162,132,94,255", "142,142,147,255",
+    "255,112,67,255", "198,255,0,255",
+)
 
 private fun testActivityDb(
     id: Int = 1,
