@@ -96,6 +96,39 @@ class RepeatingPeriodTest {
         )
         assertEquals(RepeatingDb.TYPE.DAYS_OF_MONTH, RepeatingDb.Period.DaysOfMonth(setOf(1)).type)
     }
+
+    @Test
+    fun daysOfYear_empty_throws() {
+        val e = assertFailsWith<UiException> {
+            RepeatingDb.Period.DaysOfYear(emptyList())
+        }
+        assertEquals("No days selected", e.uiMessage)
+    }
+
+    @Test
+    fun daysOfYear_invalidDay_throws() {
+        // February only allows days 1..28
+        val e = assertFailsWith<UiException> {
+            RepeatingDb.Period.DaysOfYear(
+                listOf(RepeatingDb.Period.DaysOfYear.MonthDayItem(2, 29)),
+            )
+        }
+        assertEquals("DaysOfYear invalid day", e.uiMessage)
+    }
+
+    @Test
+    fun daysOfYear_valid_valueAndTitle() {
+        val period = RepeatingDb.Period.DaysOfYear(
+            listOf(
+                RepeatingDb.Period.DaysOfYear.MonthDayItem(4, 15),
+                RepeatingDb.Period.DaysOfYear.MonthDayItem(1, 19),
+            ),
+        )
+        // value is sorted by (monthId, dayId); title keeps items order
+        assertEquals("1.19,4.15", period.value)
+        assertEquals("15 Apr, 19 Jan", period.title)
+        assertEquals(RepeatingDb.TYPE.DAYS_OF_YEAR, period.type)
+    }
 }
 
 private fun testRepeatingDb(
