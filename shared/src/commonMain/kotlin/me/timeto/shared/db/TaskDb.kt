@@ -77,7 +77,7 @@ data class TaskDb(
 
         //////
 
-        private fun validateText(textToValidate: String): String {
+        internal fun validateText(textToValidate: String): String {
             var textFeatures = textToValidate.textFeatures()
 
             val timeParser = TimerTimeParser.parse(textFeatures.textNoFeatures)
