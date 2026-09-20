@@ -28,6 +28,33 @@ class RepeatingPeriodTest {
         assertEquals("3", RepeatingDb.Period.EveryNDays(3).value)
         assertEquals(RepeatingDb.TYPE.EVERY_N_DAYS, RepeatingDb.Period.EveryNDays(3).type)
     }
+
+    @Test
+    fun daysOfWeek_empty_throws() {
+        val e = assertFailsWith<UiException> {
+            RepeatingDb.Period.DaysOfWeek(emptySet())
+        }
+        assertEquals("DaysOfWeek no days selected", e.uiMessage)
+    }
+
+    @Test
+    fun daysOfWeek_outOfRange_throws() {
+        listOf(setOf(0, 7), setOf(-1), setOf(99)).forEach { days ->
+            val e = assertFailsWith<UiException>("days=$days") {
+                RepeatingDb.Period.DaysOfWeek(days)
+            }
+            assertEquals("DaysOfWeek invalid data", e.uiMessage)
+        }
+    }
+
+    @Test
+    fun daysOfWeek_valid_titleAndValue() {
+        assertEquals("Every day", RepeatingDb.Period.DaysOfWeek((0..6).toSet()).title)
+        val period = RepeatingDb.Period.DaysOfWeek(setOf(0, 2))
+        assertEquals("0,2", period.value)
+        assertEquals("Mon Wed", period.title)
+        assertEquals(RepeatingDb.TYPE.DAYS_OF_WEEK, period.type)
+    }
 }
 
 private fun testRepeatingDb(
