@@ -7,6 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class RepeatingPeriodTest {
@@ -237,6 +238,68 @@ class RepeatingPeriodTest {
             epochDay(2027, 9, 20),
             testRepeatingDb(last_day = epochDay(2026, 9, 20), type_id = 4, value = "9.20").getNextDay(),
         )
+    }
+
+    // prepTextForTask
+
+    @Test
+    fun prepTextForTask_emitsRepeatingToken() {
+        try {
+            Cache.kvDb = emptyList()
+            val day = 20_500
+            val repeating = testRepeatingDb(
+                id = 1_700_000_000,
+                text = "jog",
+                daytime = 3_600,
+            )
+            val text = repeating.prepTextForTask(day)
+            val expectedTime =
+                UnixTime.byLocalDay(day).localDayStartTime() + 3_600
+            assertEquals("jog #r1700000000_20500_$expectedTime", text)
+
+            val parsed = text.textFeatures().fromRepeating!!
+            assertEquals(1_700_000_000, parsed.id)
+            assertEquals(day, parsed.day)
+            assertEquals(expectedTime, parsed.time)
+            assertEquals("jog", text.textFeatures().textNoFeatures)
+        } finally {
+            Cache.kvDb = emptyList()
+        }
+    }
+
+    @Test
+    fun prepTextForTask_noDaytime_trailingUnderscore() {
+        try {
+            Cache.kvDb = emptyList()
+            val text = testRepeatingDb(
+                id = 1_700_000_000,
+                text = "jog",
+                daytime = null,
+            ).prepTextForTask(20_500)
+            assertEquals("jog #r1700000000_20500_", text)
+
+            val parsed = text.textFeatures().fromRepeating!!
+            assertEquals(1_700_000_000, parsed.id)
+            assertEquals(20_500, parsed.day)
+            assertNull(parsed.time)
+        } finally {
+            Cache.kvDb = emptyList()
+        }
+    }
+
+    @Test
+    fun prepTextForTask_important_addsToken() {
+        try {
+            Cache.kvDb = emptyList()
+            val text = testRepeatingDb(
+                id = 1_700_000_000,
+                text = "jog",
+                is_important = 1,
+            ).prepTextForTask(20_500)
+            assertTrue(text.textFeatures().isImportant)
+        } finally {
+            Cache.kvDb = emptyList()
+        }
     }
 }
 
