@@ -31,6 +31,21 @@ class TaskFolderLogicTest {
         assertFalse(custom.isTomorrow)
         assertFalse(custom.isSomeday)
     }
+
+    @Test
+    fun homeTasksFoldersSorted_pinsTodayTomorrowSomeday() {
+        val folders = listOf(
+            TaskFolderUi(testTaskFolderDb(id = 5, sort = 0, name = "Someday"), null),
+            TaskFolderUi(testTaskFolderDb(id = 9, sort = 20, name = "b"), null),
+            TaskFolderUi(testTaskFolderDb(id = 1, sort = 0, name = "Today"), null),
+            TaskFolderUi(testTaskFolderDb(id = 8, sort = 10, name = "a"), null),
+            TaskFolderUi(testTaskFolderDb(id = 4, sort = 0, name = "Tomorrow"), null),
+        )
+        assertEquals(
+            listOf(1, 4, 8, 9, 5),
+            folders.homeTasksFoldersSorted().map { it.taskFolderDb.id },
+        )
+    }
 }
 
 private fun testTaskFolderDb(
