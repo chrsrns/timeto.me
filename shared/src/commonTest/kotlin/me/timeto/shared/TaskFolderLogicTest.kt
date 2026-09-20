@@ -46,6 +46,30 @@ class TaskFolderLogicTest {
             folders.homeTasksFoldersSorted().map { it.taskFolderDb.id },
         )
     }
+
+    @Test
+    fun symbolOrDefault_blankFallsBackToInbox() {
+        assertEquals(
+            Symbol.Icon(Symbol.Icon.IconEnum.inbox),
+            testTaskFolderDb(id = 1, symbol_raw = "").symbolOrDefault(),
+        )
+        assertEquals(
+            Symbol.Icon(Symbol.Icon.IconEnum.inbox),
+            testTaskFolderDb(id = 1, symbol_raw = "garbage").symbolOrDefault(),
+        )
+    }
+
+    @Test
+    fun symbolOrDefault_validRaw_parses() {
+        assertEquals(
+            Symbol.Icon(Symbol.Icon.IconEnum.timer),
+            testTaskFolderDb(id = 1, symbol_raw = "icon--timer").symbolOrDefault(),
+        )
+        assertEquals(
+            Symbol.Emoji("🔥"),
+            testTaskFolderDb(id = 1, symbol_raw = "emoji--🔥").symbolOrDefault(),
+        )
+    }
 }
 
 private fun testTaskFolderDb(
