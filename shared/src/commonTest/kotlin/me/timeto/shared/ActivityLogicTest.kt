@@ -140,6 +140,52 @@ class ActivityLogicTest {
             ActivityDb.Period.fromJson(json)
         }
     }
+
+    // buildTimerHints
+
+    @Test
+    fun buildTimerHints_parsesCommaSeparated() {
+        assertEquals(
+            listOf(300, 600),
+            testActivityDb(timer_hints = "300,600").buildTimerHints(),
+        )
+    }
+
+    @Test
+    fun buildTimerHints_dropsNonPositiveAndInvalid() {
+        assertEquals(
+            listOf(300),
+            testActivityDb(timer_hints = "0,-5,abc,300").buildTimerHints(),
+        )
+    }
+
+    @Test
+    fun buildTimerHints_distinct() {
+        assertEquals(
+            listOf(300, 600),
+            testActivityDb(timer_hints = "300,300,600").buildTimerHints(),
+        )
+    }
+
+    @Test
+    fun buildTimerHints_empty_returnsEmpty() {
+        assertEquals(
+            emptyList(),
+            testActivityDb(timer_hints = "").buildTimerHints(),
+        )
+    }
+
+    @Test
+    fun buildTimerHintsOrDefault_fallsBackWhenEmpty() {
+        assertEquals(
+            listOf(45 * 60),
+            testActivityDb(timer_hints = "").buildTimerHintsOrDefault(),
+        )
+        assertEquals(
+            listOf(45),
+            testActivityDb(timer_hints = "45").buildTimerHintsOrDefault(),
+        )
+    }
 }
 
 private fun testActivityDb(
