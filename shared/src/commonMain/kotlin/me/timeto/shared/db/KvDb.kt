@@ -49,7 +49,7 @@ data class KvDb(
         ///
 
         fun KvDb?.asDayStartOffsetSeconds(): Int =
-            this?.value?.toInt() ?: 0
+            this?.value?.toIntOrNull() ?: 0
 
         fun KvDb?.isSendingReports(): Boolean {
             val time: Int =
