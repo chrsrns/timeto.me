@@ -175,7 +175,7 @@ class SummaryVm : Vm<SummaryVm.State>() {
 
 ///
 
-private fun prepActivitiesUi(
+internal fun prepActivitiesUi(
     daysBarsUi: List<DayBarsUi>
 ): List<SummaryVm.ActivityUi> {
 

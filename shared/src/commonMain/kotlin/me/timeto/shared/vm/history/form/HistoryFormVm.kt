@@ -129,7 +129,7 @@ class HistoryFormVm(
     }
 }
 
-private fun makeTimerItemsUi(
+internal fun makeTimerItemsUi(
     selectedTime: Int,
 ): List<HistoryFormVm.TimerItemUi> {
     val secondsSet: MutableSet<Int> = mutableSetOf(selectedTime)

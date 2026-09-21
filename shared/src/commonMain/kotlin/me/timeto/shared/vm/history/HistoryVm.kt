@@ -191,7 +191,7 @@ internal fun makePeriodString(
     return "${h}h ${m.toString().padStart(2, '0')}m"
 }
 
-private object DaysUiUtils {
+internal object DaysUiUtils {
 
     suspend fun selectDaysUi(
         firstDay: Int,
