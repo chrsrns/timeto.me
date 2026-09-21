@@ -59,17 +59,6 @@ class HomeButtonsUiTest {
 
     ///
 
-    private fun seedTaskFolders() {
-        db.taskFolderQueries.insert(
-            id = TaskFolderDb.ID_TODAY, sort = 0,
-            activity_id = null, name = "Today", symbol_raw = "icon--inbox",
-        )
-        db.taskFolderQueries.insert(
-            id = TaskFolderDb.ID_TOMORROW, sort = 1,
-            activity_id = null, name = "Tomorrow", symbol_raw = "icon--inbox",
-        )
-    }
-
     private fun HomeButtonUi.activityId(): Int? =
         (type as? HomeButtonType.Activity)?.activityDb?.id
 }

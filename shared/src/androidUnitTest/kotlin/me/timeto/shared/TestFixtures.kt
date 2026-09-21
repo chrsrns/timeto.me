@@ -4,10 +4,26 @@ import dbsq.ActivitySq
 import dbsq.IntervalSq
 import me.timeto.shared.db.ActivityDb
 import me.timeto.shared.db.IntervalDb
+import me.timeto.shared.db.TaskFolderDb
 import me.timeto.shared.db.db
 import me.timeto.shared.vm.home.buttons.homeButtonsCellsCount
 
 suspend fun refreshCache(): Unit = Cache.init()
+
+fun seedTaskFolders() {
+    db.taskFolderQueries.insert(
+        id = TaskFolderDb.ID_TODAY, sort = 0,
+        activity_id = null, name = "Today", symbol_raw = "icon--inbox",
+    )
+    db.taskFolderQueries.insert(
+        id = TaskFolderDb.ID_TOMORROW, sort = 1,
+        activity_id = null, name = "Tomorrow", symbol_raw = "icon--inbox",
+    )
+    db.taskFolderQueries.insert(
+        id = TaskFolderDb.ID_SOMEDAY, sort = 2,
+        activity_id = null, name = "Someday", symbol_raw = "icon--inbox",
+    )
+}
 
 fun insertActivitySq(
     id: Int,
