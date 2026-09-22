@@ -29,11 +29,6 @@ UPDATE EventSQ
 SET text=?, utc_time=?
 WHERE id=?;
 
-updateTextTodoRemove:
-UPDATE EventSQ
-SET text=?
-WHERE id=?;
-
 --
 -- Delete
 
