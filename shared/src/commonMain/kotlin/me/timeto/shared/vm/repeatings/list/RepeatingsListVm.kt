@@ -52,7 +52,7 @@ class RepeatingsListVm : Vm<RepeatingsListVm.State>() {
     }
 }
 
-private fun List<RepeatingDb>.toUiList(
+internal fun List<RepeatingDb>.toUiList(
 ): List<RepeatingsListVm.RepeatingUi> = this
     .groupBy { it.getNextDay() }
     .toList()
