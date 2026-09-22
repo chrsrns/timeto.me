@@ -12,6 +12,7 @@ import me.timeto.shared.getString
 import me.timeto.shared.time
 import me.timeto.shared.toJsonArray
 import me.timeto.shared.UiException
+import kotlin.math.max
 
 data class EventDb(
     val id: Int,
@@ -32,13 +33,17 @@ data class EventDb(
             text: String,
             localTime: Int,
         ): Unit = dbIo {
-            db.eventQueries.insertObject(
-                EventSQ(
-                    id = time(), // todo check unique
-                    text = validateText(text),
-                    utc_time = localTime + localUtcOffset
+            db.transaction {
+                val lastId: Int? = db.eventQueries
+                    .selectAscByTime().executeAsList().maxOfOrNull { it.id }
+                db.eventQueries.insertObject(
+                    EventSQ(
+                        id = max(time(), lastId?.plus(1) ?: 0),
+                        text = validateText(text),
+                        utc_time = localTime + localUtcOffset
+                    )
                 )
-            )
+            }
         }
 
         suspend fun syncTodaySafe(today: Int): Unit = dbIo {
