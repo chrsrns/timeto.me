@@ -77,6 +77,23 @@ class HomeButtonCompletionTest {
     }
 
     @Test
+    fun checklistGoal_noItems_completed() {
+        try {
+            Cache.checklistsDb = listOf(ChecklistDb(id = 1, name = "L", reset_day = 0))
+            Cache.checklistItemsDb = emptyList()
+            val activityDb = testActivityDb(
+                name = "A #c1",
+                goalJson = ActivityDb.GoalType.Checklist.toJson(),
+            )
+            // totalCount == completedCount == 0 -> vacuously complete
+            assertTrue(buildButton(activityDb).isCompleted)
+        } finally {
+            Cache.checklistsDb = emptyList()
+            Cache.checklistItemsDb = emptyList()
+        }
+    }
+
+    @Test
     fun noGoal_alwaysCompleted() {
         assertTrue(buildButton(testActivityDb(goalJson = null)).isCompleted)
     }
