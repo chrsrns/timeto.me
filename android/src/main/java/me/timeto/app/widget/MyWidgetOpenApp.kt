@@ -42,18 +42,21 @@ object MyWidgetOpenApp {
 
         companion object {
 
-            fun parse(raw: String): AppAction? = when {
-                raw == "new-task" -> NewTask
-                raw == "open-calendar" -> OpenCalendar
-                raw.startsWith("open-task-folder:") -> OpenTaskFolder(
-                    taskFolderId = raw.split(":")[1].toInt(),
-                )
-                raw.startsWith("open-note-folder:") -> OpenNoteFolder(
-                    noteFolderId = raw.split(":")[1].toInt(),
-                )
-                else -> {
+            fun parse(raw: String): AppAction? {
+                fun invalid(): AppAction? {
                     reportApi("MyWidgetOpenApp.AppAction.parse(): Invalid App Action $raw")
                     return null
+                }
+                return when {
+                    raw == "new-task" -> NewTask
+                    raw == "open-calendar" -> OpenCalendar
+                    raw.startsWith("open-task-folder:") ->
+                        raw.split(":")[1].toIntOrNull()?.let { OpenTaskFolder(taskFolderId = it) }
+                            ?: invalid()
+                    raw.startsWith("open-note-folder:") ->
+                        raw.split(":")[1].toIntOrNull()?.let { OpenNoteFolder(noteFolderId = it) }
+                            ?: invalid()
+                    else -> invalid()
                 }
             }
         }
