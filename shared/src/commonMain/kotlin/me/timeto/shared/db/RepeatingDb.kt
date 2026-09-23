@@ -405,9 +405,6 @@ data class RepeatingDb(
                 if (weekDays.isEmpty())
                     throw UiException("DaysOfWeek no days selected")
 
-                if (weekDays.size != weekDays.distinct().size)
-                    throw UiException("DaysOfWeek not distinct")
-
                 if (weekDays.any { it !in 0..6 })
                     throw UiException("DaysOfWeek invalid data")
 
