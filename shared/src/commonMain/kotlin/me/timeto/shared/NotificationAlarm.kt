@@ -17,10 +17,24 @@ data class NotificationAlarm(
 
         const val NO_ACTIVITY_DAYS_LIMIT = 7
 
+        const val NOTIFICATION_ID_BREAK = 1
+        const val NOTIFICATION_ID_OVERDUE = 2
+        const val NOTIFICATION_ID_LIVE_UPDATE = 3
+        const val NOTIFICATION_ID_NO_ACTIVITY_START = 100
+        val NOTIFICATION_ID_NO_ACTIVITY_RANGE: IntRange =
+            NOTIFICATION_ID_NO_ACTIVITY_START..(NOTIFICATION_ID_NO_ACTIVITY_START + NO_ACTIVITY_DAYS_LIMIT)
+
         const val EXPIRED_REPEAT_MAX_K = 48
         const val EXPIRED_REPEAT_HORIZON_SECONDS = 86_400
         const val EXPIRED_REPEAT_REQUEST_CODE_START = 200
         const val EXPIRED_REPEAT_NOTIFICATION_ID = 4
+
+        fun requestCodeFor(type: Type): Int = when (type) {
+            Type.TimeToBreak -> NOTIFICATION_ID_BREAK
+            Type.Overdue -> NOTIFICATION_ID_OVERDUE
+            is Type.NoActivity -> NOTIFICATION_ID_NO_ACTIVITY_START + type.day
+            is Type.ExpiredRepeat -> EXPIRED_REPEAT_REQUEST_CODE_START + type.k
+        }
 
         fun notificationIdForRequestCode(requestCode: Int): Int =
             if (requestCode in EXPIRED_REPEAT_REQUEST_CODE_START..(EXPIRED_REPEAT_REQUEST_CODE_START + EXPIRED_REPEAT_MAX_K))

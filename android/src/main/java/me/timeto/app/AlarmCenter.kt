@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import me.timeto.app.NotificationsUtils.NOTIFICATION_ID_BREAK
-import me.timeto.app.NotificationsUtils.NOTIFICATION_ID_NO_ACTIVITY_START
 import me.timeto.app.NotificationsUtils.NOTIFICATION_ID_OVERDUE
 import me.timeto.shared.NotificationAlarm
 import me.timeto.shared.timeMls
@@ -13,12 +12,7 @@ import me.timeto.shared.timeMls
 object AlarmCenter {
 
     fun scheduleNotification(data: NotificationAlarm) {
-        val requestCode: Int = when (val type = data.type) {
-            NotificationAlarm.Type.TimeToBreak -> NOTIFICATION_ID_BREAK
-            NotificationAlarm.Type.Overdue -> NOTIFICATION_ID_OVERDUE
-            is NotificationAlarm.Type.NoActivity -> NOTIFICATION_ID_NO_ACTIVITY_START + type.day
-            is NotificationAlarm.Type.ExpiredRepeat -> NotificationAlarm.EXPIRED_REPEAT_REQUEST_CODE_START + type.k
-        }
+        val requestCode: Int = NotificationAlarm.requestCodeFor(data.type)
 
         val context = App.instance
         val intent = Intent(context, TimerNotificationReceiver::class.java)

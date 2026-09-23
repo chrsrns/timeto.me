@@ -18,15 +18,15 @@ import me.timeto.shared.getSoundTimerExpiredFileName
  */
 object NotificationsUtils {
 
-    const val NOTIFICATION_ID_BREAK = 1
-    const val NOTIFICATION_ID_OVERDUE = 2
-    const val NOTIFICATION_ID_LIVE_UPDATE = 3
+    const val NOTIFICATION_ID_BREAK = NotificationAlarm.NOTIFICATION_ID_BREAK
+    const val NOTIFICATION_ID_OVERDUE = NotificationAlarm.NOTIFICATION_ID_OVERDUE
+    const val NOTIFICATION_ID_LIVE_UPDATE = NotificationAlarm.NOTIFICATION_ID_LIVE_UPDATE
     const val NOTIFICATION_ID_EXPIRED_REPEAT = NotificationAlarm.EXPIRED_REPEAT_NOTIFICATION_ID
 
     // region NO_ACTIVITY
-    const val NOTIFICATION_ID_NO_ACTIVITY_START = 100
+    const val NOTIFICATION_ID_NO_ACTIVITY_START = NotificationAlarm.NOTIFICATION_ID_NO_ACTIVITY_START
     val NOTIFICATION_ID_NO_ACTIVITY_RANGE: IntRange =
-        NOTIFICATION_ID_NO_ACTIVITY_START..(NOTIFICATION_ID_NO_ACTIVITY_START + NotificationAlarm.NO_ACTIVITY_DAYS_LIMIT)
+        NotificationAlarm.NOTIFICATION_ID_NO_ACTIVITY_RANGE
     // endregion
 
     // region EXPIRED_REPEAT
