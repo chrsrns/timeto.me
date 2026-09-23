@@ -10,6 +10,20 @@ import me.timeto.shared.vm.home.buttons.homeButtonsCellsCount
 
 suspend fun refreshCache(): Unit = Cache.init()
 
+/**
+ * `Cache.firstIntervalDb`/`lastIntervalDb` are `lateinit` — once set they stay
+ * initialized for the whole test JVM, making `AppVm`'s `fillInitData` gate
+ * order-dependent. Nulls the backing fields so a fresh-db state is testable.
+ */
+fun resetCacheLateInit() {
+    listOf("firstIntervalDb", "lastIntervalDb").forEach { name ->
+        Cache::class.java.getDeclaredField(name).apply {
+            isAccessible = true
+            set(Cache, null)
+        }
+    }
+}
+
 fun seedTaskFolders() {
     db.taskFolderQueries.insert(
         id = TaskFolderDb.ID_TODAY, sort = 0,
