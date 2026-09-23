@@ -260,11 +260,11 @@ data class ActivityDb(
             if (parentActivityDb != null) {
                 var nextParentActivityDb: ActivityDb = parentActivityDb
                 while (true) {
+                    if (nextParentActivityDb.id == id)
+                        throw UiException("Recursive parent activity error")
                     val nextParentId = nextParentActivityDb.parent_id
                     if (nextParentId == null)
                         break
-                    if (nextParentId == id)
-                        throw UiException("Recursive parent activity error")
                     nextParentActivityDb = selectAllSync().first { it.id == nextParentId }
                 }
             }

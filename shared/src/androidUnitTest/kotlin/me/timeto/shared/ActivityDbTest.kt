@@ -95,6 +95,27 @@ class ActivityDbTest {
         assertEquals("Recursive parent activity error", ex.message)
     }
 
+    @Test
+    fun update_selfParent_throws() = runBlocking {
+        initTestDb()
+        val activityDb = insertActivity(name = "A")
+        val ex = assertFailsWith<UiException> {
+            activityDb.updateWithValidation(
+                name = "A",
+                goalType = null,
+                timerType = ActivityDb.TimerType.TimerPicker,
+                period = ActivityDb.Period.Weekly(),
+                symbol = Symbol.Icon.IconEnum.inbox.toIcon(),
+                colorRgba = ColorRgba(1, 2, 3),
+                keepScreenOn = false,
+                pomodoroTimer = 0,
+                timerHints = emptyList(),
+                parentActivityDb = activityDb,
+            )
+        }
+        assertEquals("Recursive parent activity error", ex.message)
+    }
+
     ///
 
     private suspend fun insertActivity(
