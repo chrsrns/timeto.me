@@ -93,7 +93,11 @@ fun buildExpiredRepeatNotifications(
 }
 
 private suspend fun rescheduleNotifications() {
-    val lastIntervalDb = IntervalDb.selectLastOneOrNull()!!
+    val lastIntervalDb = IntervalDb.selectLastOneOrNull() ?: run {
+        // No interval means nothing to schedule; clear any stale alarms.
+        NotificationAlarm.flow.emit(emptyList())
+        return
+    }
 
     val liveActivity = LiveActivity(lastIntervalDb)
     LiveActivity.flow.emit(liveActivity)
