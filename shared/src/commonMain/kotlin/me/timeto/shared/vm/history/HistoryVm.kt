@@ -178,7 +178,7 @@ class HistoryVm : Vm<HistoryVm.State>() {
 
 ///
 
-private fun makePeriodString(
+internal fun makePeriodString(
     seconds: Int,
 ): String {
     if (seconds < 60)
@@ -191,7 +191,7 @@ private fun makePeriodString(
     return "${h}h ${m.toString().padStart(2, '0')}m"
 }
 
-private object DaysUiUtils {
+internal object DaysUiUtils {
 
     suspend fun selectDaysUi(
         firstDay: Int,

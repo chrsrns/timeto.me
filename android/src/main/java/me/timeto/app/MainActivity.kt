@@ -79,15 +79,7 @@ class MainActivity : ComponentActivity() {
     val statusBarHeightFlow = MutableStateFlow(0.dp)
     val windowInsetsFlow = MutableStateFlow(WindowInsets(0, 0, 0, 0))
 
-    private val batteryReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent) {
-            val level: Int = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-            val scale: Int = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-            BatteryInfo.emitLevel(level * 100 / scale)
-            val plugged: Int = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0)
-            BatteryInfo.emitIsCharging(plugged != 0)
-        }
-    }
+    private val batteryReceiver = BatteryReceiver()
 
     private val timeZoneReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
@@ -410,4 +402,15 @@ private fun getStatusBarHeight(activity: Activity): Dp {
         return pxToDp(resources.getDimensionPixelSize(resourceId)).dp
     reportApi("Invalid status_bar_height $resourceId")
     return 0.dp
+}
+
+internal class BatteryReceiver : BroadcastReceiver() {
+
+    override fun onReceive(context: Context?, intent: Intent) {
+        val level: Int = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+        val scale: Int = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+        BatteryInfo.emitLevel(level * 100 / scale)
+        val plugged: Int = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0)
+        BatteryInfo.emitIsCharging(plugged != 0)
+    }
 }

@@ -72,7 +72,7 @@ class SummaryCalendarVm(
     }
 }
 
-private fun buildCalendar(): List<SummaryCalendarVm.WeekUi> {
+internal fun buildCalendar(): List<SummaryCalendarVm.WeekUi> {
     val resList = mutableListOf<SummaryCalendarVm.WeekUi>()
     val timeStart = UnixTime(Cache.firstIntervalDb.time)
     val timeFinish = UnixTime()

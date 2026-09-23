@@ -31,7 +31,7 @@ class EventTemplatesVm : Vm<EventTemplatesVm.State>() {
     }
 }
 
-private fun List<EventTemplateDb>.toTemplatesUi(
+internal fun List<EventTemplateDb>.toTemplatesUi(
 ): List<EventTemplateUi> = this.reversed().map { eventTemplateDb ->
     EventTemplateUi(
         eventTemplateDb = eventTemplateDb,

@@ -1,5 +1,6 @@
 package me.timeto.shared.db
 
+import app.cash.sqldelight.coroutines.asFlow
 import dbsq.NoteFolderSq
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonElement
@@ -29,6 +30,9 @@ data class NoteFolderDb(
 
         //
         // Select
+
+        fun anyChangeFlow(): Flow<*> =
+            db.noteFolderQueries.anyChange().asFlow()
 
         suspend fun selectAllSorted(): List<NoteFolderDb> = dbIo {
             db.noteFolderQueries.selectAllSorted().asList { toDb() }

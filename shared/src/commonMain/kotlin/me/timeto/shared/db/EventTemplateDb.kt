@@ -16,6 +16,7 @@ import me.timeto.shared.getString
 import me.timeto.shared.time
 import me.timeto.shared.toJsonArray
 import me.timeto.shared.UiException
+import kotlin.math.max
 
 data class EventTemplateDb(
     val id: Int,
@@ -38,15 +39,17 @@ data class EventTemplateDb(
             text: String,
         ) {
             dbIo {
-                val templates = db.eventTemplateQueries.selectAscSorted().executeAsList().toDbList()
-                db.eventTemplateQueries.insertObject(
-                    EventTemplateSQ(
-                        id = time(), // todo validation
-                        sort = 0,
-                        daytime = dayTimeValidation(daytime),
-                        text = textValidation(text, templates),
+                db.transaction {
+                    val templates = db.eventTemplateQueries.selectAscSorted().executeAsList().toDbList()
+                    db.eventTemplateQueries.insertObject(
+                        EventTemplateSQ(
+                            id = max(time(), (templates.maxOfOrNull { it.id } ?: 0) + 1),
+                            sort = 0,
+                            daytime = dayTimeValidation(daytime),
+                            text = textValidation(text, templates),
+                        )
                     )
-                )
+                }
             }
         }
 

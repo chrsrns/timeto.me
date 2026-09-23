@@ -247,7 +247,7 @@ private const val DEFAULT_FEEDBACK_SUBJECT = "Feedback"
 private fun KvDb?.privacyEmojiOrNull(): String? =
     if (this.isSendingReports()) null else prayEmoji
 
-private fun dayStartSecondsToString(seconds: Int): String {
+internal fun dayStartSecondsToString(seconds: Int): String {
     if ((seconds % 3_600) != 0) {
         reportApi("Invalid seconds in SettingsVm.dayStartSecondsToString($seconds)")
         return "error"

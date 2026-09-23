@@ -12,6 +12,11 @@ CREATE TABLE NoteFolderSq (
 --
 -- Select
 
+anyChange:
+SELECT id
+FROM NoteFolderSq
+LIMIT 1;
+
 selectAllSorted:
 SELECT *
 FROM NoteFolderSq

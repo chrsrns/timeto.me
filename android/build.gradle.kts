@@ -67,6 +67,8 @@ android {
     compileOptions.targetCompatibility = JavaVersion.VERSION_21
 
     buildFeatures.buildConfig = true
+
+    testOptions.unitTests.isIncludeAndroidResources = true
 }
 
 dependencies {
@@ -76,4 +78,6 @@ dependencies {
     implementation("androidx.compose.material:material:1.11.4")
     implementation("com.google.android.material:material:1.14.0")
     implementation("androidx.glance:glance-appwidget:1.2.0")
+    testImplementation(kotlin("test"))
+    testImplementation("org.robolectric:robolectric:4.16.1")
 }

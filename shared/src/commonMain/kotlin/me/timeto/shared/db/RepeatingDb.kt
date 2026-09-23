@@ -405,9 +405,6 @@ data class RepeatingDb(
                 if (weekDays.isEmpty())
                     throw UiException("DaysOfWeek no days selected")
 
-                if (weekDays.size != weekDays.distinct().size)
-                    throw UiException("DaysOfWeek not distinct")
-
                 if (weekDays.any { it !in 0..6 })
                     throw UiException("DaysOfWeek invalid data")
 
@@ -533,7 +530,7 @@ private fun RepeatingSQ.toDb() = RepeatingDb(
 )
 
 @Throws(UiException::class)
-private fun validateTextEx(text: String): String {
+internal fun validateTextEx(text: String): String {
     val validatedText: String = text.trim()
     if (validatedText.isEmpty())
         throw UiException("Empty text")

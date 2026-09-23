@@ -23,7 +23,7 @@ class EmojiPickerVm : Vm<EmojiPickerVm.State>() {
         )
     )
 
-    private var allEmojis: List<Emoji> = emptyList()
+    internal var allEmojis: List<Emoji> = emptyList()
 
     init {
         val scopeVm = scopeVm()

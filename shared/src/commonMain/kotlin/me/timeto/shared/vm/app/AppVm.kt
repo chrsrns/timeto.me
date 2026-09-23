@@ -156,7 +156,7 @@ private fun performShortcutForInterval(
 
 ///
 
-private suspend fun syncTomorrow(todayWithDayStartOffset: Int) {
+internal suspend fun syncTomorrow(todayWithDayStartOffset: Int) {
     val todayFolder: TaskFolderDb = TaskFolderDb.selectAllSorted().first { it.isToday }
     val dayStartOffsetSeconds: Int = DayStartOffsetUtils.getOffsetSeconds()
     Cache.tasksDb

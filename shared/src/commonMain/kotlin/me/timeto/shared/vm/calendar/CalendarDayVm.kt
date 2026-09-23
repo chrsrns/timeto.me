@@ -70,7 +70,7 @@ class CalendarDayVm(
     }
 }
 
-private fun buildItemsUi(
+internal fun buildItemsUi(
     unixDay: Int,
     allEventsDb: List<EventDb>,
     allRepeatingsDb: List<RepeatingDb>,

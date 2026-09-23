@@ -49,11 +49,11 @@ data class KvDb(
         ///
 
         fun KvDb?.asDayStartOffsetSeconds(): Int =
-            this?.value?.toInt() ?: 0
+            this?.value?.toIntOrNull() ?: 0
 
         fun KvDb?.isSendingReports(): Boolean {
             val time: Int =
-                this?.value?.toInt() ?: return !SystemInfo.instance.isFdroid
+                this?.value?.toIntOrNull() ?: return !SystemInfo.instance.isFdroid
             return time > 0
         }
 
@@ -130,7 +130,7 @@ data class KvDb(
         // selectIntOrNull..
 
         fun selectIntOrNullFlow(): Flow<Int?> =
-            selectOrNullFlow().map { it?.value?.toInt() }
+            selectOrNullFlow().map { it?.value?.toIntOrNull() }
 
         // upsert..
 

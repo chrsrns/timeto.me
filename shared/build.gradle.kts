@@ -52,6 +52,13 @@ kotlin {
             }
         }
 
+        val androidUnitTest by getting {
+            dependencies {
+                implementation("app.cash.sqldelight:sqlite-driver:$sqldelight_version")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+            }
+        }
+
         val appleMain by creating {
             dependsOn(commonMain)
             dependencies {
