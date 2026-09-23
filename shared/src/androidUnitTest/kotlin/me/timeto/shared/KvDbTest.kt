@@ -1,5 +1,6 @@
 package me.timeto.shared
 
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import me.timeto.shared.db.KvDb
 import me.timeto.shared.db.KvDb.Companion.asDayStartOffsetSeconds
@@ -36,6 +37,19 @@ class KvDbTest {
         assertTrue(KvDb("k", "5").isSendingReports())
         assertFalse(KvDb("k", "0").isSendingReports())
         assertFalse(KvDb("k", "-5").isSendingReports())
+    }
+
+    @Test
+    fun isSendingReports_malformedValue_defaults() {
+        // Non-numeric stored value falls back to flavor default, no crash
+        assertTrue(KvDb("k", "abc").isSendingReports())
+    }
+
+    @Test
+    fun selectIntOrNullFlow_malformed_emitsNull() = runBlocking {
+        initTestDb()
+        KvDb.KEY.RATE_TIME.upsertString("abc")
+        assertNull(KvDb.KEY.RATE_TIME.selectIntOrNullFlow().first())
     }
 
     @Test
