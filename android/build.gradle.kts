@@ -76,4 +76,5 @@ dependencies {
     implementation("androidx.compose.material:material:1.11.4")
     implementation("com.google.android.material:material:1.14.0")
     implementation("androidx.glance:glance-appwidget:1.2.0")
+    testImplementation(kotlin("test"))
 }
