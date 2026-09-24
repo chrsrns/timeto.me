@@ -36,7 +36,7 @@ data class WidgetUi(
             rowHeight: Float,
             spacing: Float,
         ): WidgetUi {
-            Cache.init()
+            Cache.awaitReady()
             return build(
                 width = width,
                 rowHeight = rowHeight,
@@ -58,7 +58,7 @@ data class WidgetUi(
             val allRepeatingsDb: List<RepeatingDb> = RepeatingDb.selectAsc()
             val allEventsDb: List<EventDb> = EventDb.selectAscByTime()
             val allTaskFoldersUi: List<TaskFolderUi> = TaskFolderDb.selectAllSorted().map {
-                TaskFolderUi(it, it.selectActivityDbOrNullCached())
+                TaskFolderUi(it, it.activity_id?.let { activityId -> Cache.requireActivity(activityId) })
             }
             val homeNoteFoldersUi: List<NoteFolderUi> = NoteFolderDb.selectAllSorted()
                 .filter { it.onHome }
@@ -68,7 +68,7 @@ data class WidgetUi(
             val timerStateUi = TimerStateUi(
                 intervalUi = IntervalUi(
                     intervalDb = lastIntervalDb,
-                    activityDb = lastIntervalDb.selectActivityDbCached(),
+                    activityDb = Cache.requireActivity(lastIntervalDb.activityId),
                 ),
                 todayTasksDb = allTasksUi.filter { it.taskDb.isToday }.map { it.taskDb },
                 isPurple = false,

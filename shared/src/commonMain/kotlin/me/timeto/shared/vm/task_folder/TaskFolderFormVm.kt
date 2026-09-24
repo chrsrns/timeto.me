@@ -55,7 +55,7 @@ class TaskFolderFormVm(
     override val state = MutableStateFlow(
         State(
             folderDb = folderDb,
-            activityDb = folderDb?.selectActivityDbOrNullCached(),
+            activityDb = folderDb?.activity_id?.let { Cache.requireActivity(it) },
             name = folderDb?.name ?: "",
             symbol = folderDb?.symbolOrDefault(),
         )

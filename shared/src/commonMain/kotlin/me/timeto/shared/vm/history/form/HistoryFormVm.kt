@@ -43,7 +43,7 @@ class HistoryFormVm(
     override val state = MutableStateFlow(
         State(
             initIntervalDb = initIntervalDb,
-            activityDb = initIntervalDb.selectActivityDbCached(),
+            activityDb = Cache.requireActivity(initIntervalDb.activityId),
             time = initTime,
             activitiesUi = Cache.activitiesDb.map { ActivityUi(it) },
             timerItemsUi = makeTimerItemsUi(selectedTime = initTime),

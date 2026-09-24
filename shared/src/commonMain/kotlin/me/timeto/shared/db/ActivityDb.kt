@@ -72,25 +72,6 @@ data class ActivityDb(
         suspend fun selectByIdOrNull(id: Int): ActivityDb? =
             selectAll().firstOrNull { it.id == id }
 
-        fun selectOtherCached(): ActivityDb =
-            Cache.activitiesDb.first { it.type_id == Type.other.id }
-
-        fun selectParentRecursiveMapCached(): Map<Int, List<ActivityDb>> {
-            val all = Cache.activitiesDb
-            val resMap: Map<Int, MutableList<ActivityDb>> =
-                all.associate { it.id to mutableListOf() }
-            all.forEach { activityDb ->
-                fun addRecursive(parentActivityDb: ActivityDb) {
-                    val childrenActivitiesDb =
-                        all.filter { it.parent_id == parentActivityDb.id }
-                    resMap[activityDb.id]!!.addAll(childrenActivitiesDb)
-                    childrenActivitiesDb.forEach { addRecursive(it) }
-                }
-                addRecursive(activityDb)
-            }
-            return resMap
-        }
-
         //
         // Insert
 
@@ -135,20 +116,6 @@ data class ActivityDb(
                 db.activityQueries.insert(activitySq)
                 activitySq.toDb()
             }
-        }
-
-        ///
-
-        fun nextColorCached(): ColorRgba {
-            val activitiesColors: List<String> =
-                Cache.activitiesDb.map { activityDb ->
-                    activityDb.colorRgba.toRgbaString()
-                }
-            for (color in colors) {
-                if (!activitiesColors.contains(color.toRgbaString()))
-                    return color
-            }
-            return colors.random()
         }
 
         //
@@ -618,7 +585,7 @@ private fun assertIsValidName(name: String) {
 // attractiveness. In fillInitData() hardcode by indexes.
 // https://developer.apple.com/design/human-interface-guidelines/ios/visual-design/color
 // https://material.io/resources/color
-private val colors = listOf(
+internal val colors = listOf(
     ColorRgba(52, 199, 89), // Green
     ColorRgba(0, 122, 255), // Blue
     ColorRgba(255, 59, 48), // Red

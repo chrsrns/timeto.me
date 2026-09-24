@@ -1,5 +1,6 @@
 package me.timeto.shared.vm.home.buttons
 
+import me.timeto.shared.Cache
 import me.timeto.shared.ColorRgba
 import me.timeto.shared.DayBarsUi
 import me.timeto.shared.HomeButtonSort
@@ -97,7 +98,7 @@ sealed class HomeButtonType {
                 }
                 ActivityDb.GoalType.Checklist -> {
                     val checklistItemsDb: List<ChecklistItemDb> =
-                        activityTf.checklistsDb.flatMap { it.getItemsCached() }
+                        activityTf.checklistsDb.flatMap { Cache.checklistItems(it.id) }
                     val totalCount: Int = checklistItemsDb.size
                     val completedCount: Int = checklistItemsDb.count { it.isChecked }
                     isCompleted = totalCount == completedCount

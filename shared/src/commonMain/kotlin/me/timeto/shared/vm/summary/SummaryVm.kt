@@ -196,7 +196,7 @@ internal fun prepActivitiesUi(
     }
 
     val recursiveMapGoalSeconds: MutableMap<Int, Int> = mutableMapOf()
-    ActivityDb.selectParentRecursiveMapCached().forEach { (activityId, childrenActivitiesDb) ->
+    Cache.activityDescendantsMap().forEach { (activityId, childrenActivitiesDb) ->
         val totalSeconds: Int =
             (mapActivitySeconds[activityId] ?: 0) + childrenActivitiesDb.sumOf { mapActivitySeconds[it.id] ?: 0 }
         if (totalSeconds > 0)

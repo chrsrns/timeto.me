@@ -142,7 +142,7 @@ class HomeVm : Vm<HomeVm.State>() {
                     mainTasks = tasksFullHeight,
                 )
             // Tasks bigger the half
-            val checklistCount: Int = checklistDb.getItemsCached().size.limitMin(1)
+            val checklistCount: Int = Cache.checklistItems(checklistDb.id).size.limitMin(1)
             val checklistFullHeight: Float = checklistCount * lc.itemHeight
             if (checklistFullHeight < halfHeight)
                 return@run ListsSizes(
@@ -167,7 +167,7 @@ class HomeVm : Vm<HomeVm.State>() {
         State(
             intervalUi = run {
                 val intervalDb: IntervalDb = Cache.lastIntervalDb
-                IntervalUi(intervalDb, intervalDb.selectActivityDbCached())
+                IntervalUi(intervalDb, Cache.requireActivity(intervalDb.activityId))
             },
             isPurple = false,
             allTasksUi = Cache.tasksDb.map { it.toUi() },
@@ -181,7 +181,7 @@ class HomeVm : Vm<HomeVm.State>() {
             allRepeatingsDb = Cache.repeatingsDb,
             allEventsDb = Cache.eventsDb,
             allTaskFoldersUi = Cache.taskFoldersDbSorted.map {
-                TaskFolderUi(it, it.selectActivityDbOrNullCached())
+                TaskFolderUi(it, it.activity_id?.let { activityId -> Cache.requireActivity(activityId) })
             },
             homeNoteFoldersUi = Cache.noteFoldersDb
                 .map { NoteFolderUi(it) }
@@ -339,7 +339,7 @@ class HomeVm : Vm<HomeVm.State>() {
                     it.copy(
                         intervalUi = IntervalUi(
                             intervalDb = lastIntervalDb,
-                            activityDb = lastIntervalDb.selectActivityDbCached(),
+                            activityDb = Cache.requireActivity(lastIntervalDb.activityId),
                         ),
                         idToUpdate = it.idToUpdate + 1, // Force update
                     )
@@ -358,7 +358,7 @@ class HomeVm : Vm<HomeVm.State>() {
     fun updateTaskFolderById(taskFolderId: Int) {
         val taskFolderUi: TaskFolderUi = Cache.taskFoldersDbSorted
             .first { it.id == taskFolderId }
-            .let { TaskFolderUi(it, it.selectActivityDbOrNullCached()) }
+            .let { TaskFolderUi(it, it.activity_id?.let { activityId -> Cache.requireActivity(activityId) }) }
         updateTaskFolder(taskFolderUi)
     }
 

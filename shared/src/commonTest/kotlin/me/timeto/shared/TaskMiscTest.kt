@@ -20,7 +20,7 @@ class TaskMiscTest {
     }
 
     @Test
-    fun selectTaskFolderDbCached_missingFolder_throws() {
+    fun requireTaskFolder_missingFolder_throws() {
         Cache.taskFoldersDbSorted = listOf(
             TaskFolderDb(
                 id = TaskFolderDb.ID_TODAY,
@@ -32,12 +32,12 @@ class TaskMiscTest {
         )
         val taskDb = TaskDb(id = 1, folder_id = 999, text = "x")
         assertFailsWith<NoSuchElementException> {
-            taskDb.selectTaskFolderDbCached()
+            Cache.requireTaskFolder(taskDb.folder_id)
         }
     }
 
     @Test
-    fun selectTaskFolderDbCached_present_returnsFolder() {
+    fun requireTaskFolder_present_returnsFolder() {
         val folderDb = TaskFolderDb(
             id = TaskFolderDb.ID_TODAY,
             sort = 0,
@@ -47,6 +47,6 @@ class TaskMiscTest {
         )
         Cache.taskFoldersDbSorted = listOf(folderDb)
         val taskDb = TaskDb(id = 1, folder_id = TaskFolderDb.ID_TODAY, text = "x")
-        assertEquals(folderDb, taskDb.selectTaskFolderDbCached())
+        assertEquals(folderDb, Cache.requireTaskFolder(taskDb.folder_id))
     }
 }

@@ -89,9 +89,6 @@ data class ChecklistDb(
         )
     }
 
-    fun getItemsCached(): List<ChecklistItemDb> =
-        Cache.checklistItemsDb.filter { it.list_id == id }
-
     @Throws(UiException::class, CancellationException::class)
     suspend fun updateWithValidation(
         name: String,

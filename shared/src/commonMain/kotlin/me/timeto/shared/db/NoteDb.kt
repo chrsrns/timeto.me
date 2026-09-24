@@ -73,9 +73,6 @@ data class NoteDb(
     fun buildTitle(): String =
         "^(.*?)(\n|$)".toRegex().find(text)!!.value.trim()
 
-    fun selectFolderDbCached(): NoteFolderDb =
-        Cache.noteFoldersDb.first { it.id == folderId }
-
     @Throws(UiException::class, CancellationException::class)
     suspend fun updateWithValidation(
         newText: String,

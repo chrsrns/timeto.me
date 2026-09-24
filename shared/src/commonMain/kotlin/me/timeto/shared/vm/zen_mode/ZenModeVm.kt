@@ -54,11 +54,11 @@ class ZenModeVm : Vm<ZenModeVm.State>() {
             State(
                 intervalUi = IntervalUi(
                     intervalDb = intervalDb,
-                    activityDb = intervalDb.selectActivityDbCached(),
+                    activityDb = Cache.requireActivity(intervalDb.activityId),
                 ),
                 allTasksDb = Cache.tasksDb,
                 initShowChecklist = intervalDb.activityId !in parseHiddenActivityIds(
-                    raw = KvDb.KEY.ZEN_MODE_CHECKLISTS_VISIBILITY.selectStringOrNullCached()
+                    raw = Cache.kvStringOrNull(KvDb.KEY.ZEN_MODE_CHECKLISTS_VISIBILITY)
                 ),
                 idToUpdate = 0,
             )

@@ -26,16 +26,16 @@ class ChecklistSharedTest {
         // Both activities resolve the same checklist with the same items.
         assertEquals(listOf(1), checklistsFor(1).map { it.id })
         assertEquals(listOf(1), checklistsFor(2).map { it.id })
-        val itemsA = checklistsFor(1).first().getItemsCached()
-        val itemsB = checklistsFor(2).first().getItemsCached()
+        val itemsA = checklistsFor(1).first().let { Cache.checklistItems(it.id) }
+        val itemsB = checklistsFor(2).first().let { Cache.checklistItems(it.id) }
         assertEquals(itemsA.map { it.id }, itemsB.map { it.id })
         assertFalse(itemsA.all { it.isChecked })
 
         // Toggling via one list is visible from both activity views.
         ChecklistItemDb.selectSorted().first().toggle()
         refreshCache()
-        val itemsAAfter = checklistsFor(1).first().getItemsCached()
-        val itemsBAfter = checklistsFor(2).first().getItemsCached()
+        val itemsAAfter = checklistsFor(1).first().let { Cache.checklistItems(it.id) }
+        val itemsBAfter = checklistsFor(2).first().let { Cache.checklistItems(it.id) }
         assertEquals(itemsAAfter.map { it.isChecked }, itemsBAfter.map { it.isChecked })
         assertTrue(itemsAAfter.count { it.isChecked } == 1)
     }

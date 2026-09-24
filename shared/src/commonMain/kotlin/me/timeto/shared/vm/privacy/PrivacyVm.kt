@@ -2,6 +2,7 @@ package me.timeto.shared.vm.privacy
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import me.timeto.shared.Cache
 import me.timeto.shared.db.KvDb
 import me.timeto.shared.db.KvDb.Companion.isSendingReports
 import me.timeto.shared.launchExIo
@@ -32,7 +33,7 @@ class PrivacyVm : Vm<PrivacyVm.State>() {
     override val state = MutableStateFlow(
         State(
             isSendingReportsEnabled =
-                KvDb.KEY.IS_SENDING_REPORTS.selectOrNullCached().isSendingReports(),
+                Cache.kvOrNull(KvDb.KEY.IS_SENDING_REPORTS).isSendingReports(),
         )
     )
 

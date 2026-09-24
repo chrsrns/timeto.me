@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
+import me.timeto.shared.Cache
 import me.timeto.shared.DialogsManager
 import me.timeto.shared.db.KvDb
 import me.timeto.shared.getString
@@ -28,8 +29,8 @@ class DonationsVm : Vm<DonationsVm.State>() {
 
     override val state = MutableStateFlow<State>(
         State(
-            supporterEmail = KvDb.KEY.DONATIONS_EMAIL.selectStringOrNullCached(),
-            activatedMessage = KvDb.KEY.DONATIONS_ACTIVATED_MESSAGE.selectStringOrNullCached(),
+            supporterEmail = Cache.kvStringOrNull(KvDb.KEY.DONATIONS_EMAIL),
+            activatedMessage = Cache.kvStringOrNull(KvDb.KEY.DONATIONS_ACTIVATED_MESSAGE),
             isActivationInProgress = false,
         )
     )

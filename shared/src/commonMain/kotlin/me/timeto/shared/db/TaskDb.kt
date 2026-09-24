@@ -164,10 +164,6 @@ data class TaskDb(
         ifTimerNeeded()
     }
 
-    fun selectTaskFolderDbCached(): TaskFolderDb {
-        return Cache.taskFoldersDbSorted.first { it.id == folder_id }
-    }
-
     suspend fun updateTextWithValidation(newText: String): Unit = dbIo {
         db.taskQueries.updateTextById(
             id = id, text = validateText(newText)
@@ -186,7 +182,7 @@ data class TaskDb(
             )
             if (updateFolderActivity) {
                 val activityDb: ActivityDb? =
-                    taskFolderDb.selectActivityDbOrNullCached()
+                    taskFolderDb.activity_id?.let { Cache.requireActivity(it) }
                 if (activityDb != null)
                     db.taskQueries.updateTextById(
                         id = id,

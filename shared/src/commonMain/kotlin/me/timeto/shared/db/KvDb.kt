@@ -113,9 +113,6 @@ data class KvDb(
             .asFlow().mapToOneOrNull(Dispatchers.IO).map { it?.toDb() }
             .distinctUntilChanged()
 
-        fun selectOrNullCached(): KvDb? =
-            Cache.kvDb.firstOrNull { it.key == name }
-
         // selectStringOrNull..
 
         suspend fun selectStringOrNull(): String? =
@@ -123,9 +120,6 @@ data class KvDb(
 
         fun selectStringOrNullFlow(): Flow<String?> =
             selectOrNullFlow().map { it?.value }
-
-        fun selectStringOrNullCached(): String? =
-            selectOrNullCached()?.value
 
         // selectIntOrNull..
 

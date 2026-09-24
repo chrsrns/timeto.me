@@ -173,7 +173,7 @@ data class IntervalDb(
                 val intervalDbTimerType: TimerType =
                     intervalDb.buildTimerType()
                 val activityDb: ActivityDb =
-                    intervalDb.selectActivityDbCached()
+                    Cache.requireActivity(intervalDb.activityId)
 
                 // region tfPaused and tfTimerType
                 val tfPaused: TextFeatures.Paused
@@ -234,7 +234,7 @@ data class IntervalDb(
                     timerType = TextFeatures.TimerType.Timer(seconds = activityDb.pomodoro_timer),
                 )
                 insertWithValidation__needTransaction(
-                    activityDb = ActivityDb.selectOtherCached(),
+                    activityDb = Cache.requireActivityByType(ActivityDb.Type.other),
                     note = pauseIntervalTf.textWithFeatures(),
                 )
             }
@@ -279,14 +279,11 @@ data class IntervalDb(
             note?.textFeatures()?.textNoFeatures?.takeIf { it.isNotBlank() }
         if (noteText != null)
             return noteText
-        return selectActivityDbCached().name.textFeatures().textNoFeatures
+        return Cache.requireActivity(activityId).name.textFeatures().textNoFeatures
     }
 
     suspend fun selectActivityDb(): ActivityDb =
         ActivityDb.selectAll().first { it.id == activityId }
-
-    fun selectActivityDbCached(): ActivityDb =
-        Cache.activitiesDb.first { it.id == activityId }
 
     @Throws(UiException::class, CancellationException::class)
     suspend fun updateTimer(timer: Int): Unit = dbIo {
