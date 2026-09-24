@@ -12,14 +12,17 @@ import me.timeto.shared.SystemInfo
 import me.timeto.shared.UnixTime
 import me.timeto.shared.db.ChecklistDb
 import me.timeto.shared.db.KvDb
+import me.timeto.shared.db.KvDb.Companion.asAlarmSnoozeSeconds
 import me.timeto.shared.db.KvDb.Companion.asDayStartOffsetSeconds
 import me.timeto.shared.db.KvDb.Companion.asTimerExpiredRepeatSeconds
+import me.timeto.shared.db.KvDb.Companion.isAlarmModeDefaultEnabled
 import me.timeto.shared.db.KvDb.Companion.isSendingReports
 import me.timeto.shared.db.ShortcutDb
 import me.timeto.shared.launchExIo
 import me.timeto.shared.prayEmoji
 import me.timeto.shared.reportApi
 import me.timeto.shared.combine
+import me.timeto.shared.onEachExIn
 import me.timeto.shared.db.ActivityDb
 import me.timeto.shared.db.KvDb.Companion.isZenModeEnabled
 import me.timeto.shared.db.NoteFolderDb
@@ -44,6 +47,8 @@ class SettingsVm : Vm<SettingsVm.State>() {
         val isZenModeEnabled: Boolean,
         val dayStartSeconds: Int,
         val timerExpiredRepeatSeconds: Int,
+        val isAlarmModeDefaultEnabled: Boolean,
+        val alarmSnoozeSeconds: Int,
         val feedbackSubject: String,
         val autoBackupTimeString: String,
         val privacyEmoji: String?,
@@ -70,6 +75,11 @@ class SettingsVm : Vm<SettingsVm.State>() {
             if (timerExpiredRepeatSeconds <= 0) "Off"
             else timerExpiredRepeatSeconds.toTimerHintNote(isShort = false)
 
+        val alarmModeTitle = "Alarm Mode"
+        val alarmSnoozeTitle = "Snooze Duration"
+        val alarmSnoozeNote: String =
+            alarmSnoozeSeconds.toTimerHintNote(isShort = false)
+
         val infoText: String = run {
             val systemInfo = SystemInfo.instance
             val osName: String = when (systemInfo.os) {
@@ -91,6 +101,8 @@ class SettingsVm : Vm<SettingsVm.State>() {
             isZenModeEnabled = Cache.kvOrNull(KvDb.KEY.ZEN_MODE_ENABLED).isZenModeEnabled(),
             dayStartSeconds = DayStartOffsetUtils.getOffsetSecondsCached(),
             timerExpiredRepeatSeconds = Cache.kvOrNull(KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS).asTimerExpiredRepeatSeconds(),
+            isAlarmModeDefaultEnabled = Cache.kvOrNull(KvDb.KEY.ALARM_MODE_DEFAULT).isAlarmModeDefaultEnabled(),
+            alarmSnoozeSeconds = Cache.kvOrNull(KvDb.KEY.ALARM_SNOOZE_SECONDS).asAlarmSnoozeSeconds(),
             feedbackSubject = DEFAULT_FEEDBACK_SUBJECT,
             autoBackupTimeString = prepAutoBackupTimeString(AutoBackup.lastTimeCache.value),
             privacyEmoji = Cache.kvOrNull(KvDb.KEY.IS_SENDING_REPORTS).privacyEmojiOrNull(),
@@ -132,6 +144,22 @@ class SettingsVm : Vm<SettingsVm.State>() {
                 )
             }
         }.launchIn(scopeVm)
+
+        KvDb.KEY.ALARM_MODE_DEFAULT
+            .selectOrNullFlow()
+            .onEachExIn(scopeVm) { alarmModeDefault ->
+                state.update {
+                    it.copy(isAlarmModeDefaultEnabled = alarmModeDefault.isAlarmModeDefaultEnabled())
+                }
+            }
+
+        KvDb.KEY.ALARM_SNOOZE_SECONDS
+            .selectOrNullFlow()
+            .onEachExIn(scopeVm) { alarmSnoozeSeconds ->
+                state.update {
+                    it.copy(alarmSnoozeSeconds = alarmSnoozeSeconds.asAlarmSnoozeSeconds())
+                }
+            }
     }
 
     fun startInterval(activityDb: ActivityDb, seconds: Int) {
@@ -149,6 +177,20 @@ class SettingsVm : Vm<SettingsVm.State>() {
     fun setTimerExpiredRepeatSeconds(seconds: Int) {
         launchExIo {
             KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS.upsertInt(seconds)
+        }
+    }
+
+    fun setAlarmModeDefaultEnabled(enabled: Boolean) {
+        state.update { it.copy(isAlarmModeDefaultEnabled = enabled) }
+        launchExIo {
+            KvDb.KEY.ALARM_MODE_DEFAULT.upsertBoolean(enabled)
+        }
+    }
+
+    fun setAlarmSnoozeSeconds(seconds: Int) {
+        state.update { it.copy(alarmSnoozeSeconds = seconds) }
+        launchExIo {
+            KvDb.KEY.ALARM_SNOOZE_SECONDS.upsertInt(seconds)
         }
     }
 
