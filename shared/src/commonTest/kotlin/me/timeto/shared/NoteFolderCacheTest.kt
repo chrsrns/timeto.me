@@ -9,23 +9,23 @@ import kotlin.test.assertFailsWith
 class NoteFolderCacheTest {
 
     @Test
-    fun selectFolderDbCached_missingFolder_throws() {
-        Cache.noteFoldersDb = emptyList()
+    fun requireNoteFolder_missingFolder_throws() {
+        Cache.overrideListsForTesting(noteFoldersDb = emptyList())
         val noteDb = NoteDb(id = 1, time = 1, sort = 0, folderId = 99, text = "x")
         assertFailsWith<NoSuchElementException> {
-            noteDb.selectFolderDbCached()
+            Cache.requireNoteFolder(noteDb.folderId)
         }
     }
 
     @Test
-    fun selectFolderDbCached_presentFolder_returns() {
+    fun requireNoteFolder_presentFolder_returns() {
         val folderDb = NoteFolderDb(
             id = 5, time = 1, sort = 0, onHome = true,
             symbol_raw = "icon--inbox", name = "Notes",
         )
-        Cache.noteFoldersDb = listOf(folderDb)
+        Cache.overrideListsForTesting(noteFoldersDb = listOf(folderDb))
         val noteDb = NoteDb(id = 1, time = 1, sort = 0, folderId = 5, text = "x")
-        assertEquals(folderDb, noteDb.selectFolderDbCached())
-        Cache.noteFoldersDb = emptyList()
+        assertEquals(folderDb, Cache.requireNoteFolder(noteDb.folderId))
+        Cache.overrideListsForTesting(noteFoldersDb = emptyList())
     }
 }

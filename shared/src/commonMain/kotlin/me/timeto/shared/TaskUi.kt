@@ -13,8 +13,8 @@ data class TaskUi(
 
     val taskFolderUi: TaskFolderUi = run {
         val taskFolderDb: TaskFolderDb =
-            taskDb.selectTaskFolderDbCached()
-        TaskFolderUi(taskFolderDb, taskFolderDb.selectActivityDbOrNullCached())
+            Cache.requireTaskFolder(taskDb.folder_id)
+        TaskFolderUi(taskFolderDb, taskFolderDb.activity_id?.let { Cache.requireActivity(it) })
     }
 
     val activityUi: ActivityUi? =

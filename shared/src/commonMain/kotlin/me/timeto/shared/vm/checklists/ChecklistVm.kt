@@ -2,6 +2,7 @@ package me.timeto.shared.vm.checklists
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import me.timeto.shared.Cache
 import me.timeto.shared.db.ChecklistDb
 import me.timeto.shared.db.ChecklistItemDb
 import me.timeto.shared.launchExIo
@@ -31,7 +32,7 @@ class ChecklistVm(
     override val state = MutableStateFlow(
         State(
             checklistDb = checklistDb,
-            itemsDb = checklistDb.getItemsCached(),
+            itemsDb = Cache.checklistItems(checklistDb.id),
         )
     )
 

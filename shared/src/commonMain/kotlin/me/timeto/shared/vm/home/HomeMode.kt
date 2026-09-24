@@ -29,7 +29,8 @@ sealed class HomeMode {
     ) : HomeMode() {
 
         val addTaskActivityDb: ActivityDb =
-            taskFolderDb.selectActivityDbOrNullCached() ?: Cache.activitiesDb.first { it.isOther }
+            taskFolderDb.activity_id?.let { Cache.requireActivity(it) }
+                ?: Cache.requireActivityByType(ActivityDb.Type.other)
 
         val addTaskStrategy = TaskFormStrategy.NewTask(
             activityDb = addTaskActivityDb,

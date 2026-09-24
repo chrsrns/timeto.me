@@ -2,6 +2,7 @@ package me.timeto.shared.vm.notes
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import me.timeto.shared.Cache
 import me.timeto.shared.db.NoteDb
 import me.timeto.shared.launchExIo
 import me.timeto.shared.DialogsManager
@@ -36,7 +37,7 @@ class NoteFormVm(
             },
             noteFolderDb = when (noteFormLogic) {
                 is NoteFormLogic.NewNote -> noteFormLogic.noteFolderDb
-                is NoteFormLogic.EditNote -> noteFormLogic.noteDb.selectFolderDbCached()
+                is NoteFormLogic.EditNote -> Cache.requireNoteFolder(noteFormLogic.noteDb.folderId)
             },
             text = when (noteFormLogic) {
                 is NoteFormLogic.NewNote -> ""

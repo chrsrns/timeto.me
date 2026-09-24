@@ -20,7 +20,7 @@ class WatchTimerVm : Vm<WatchTimerVm.State>() {
         val timerData = TimerStateUi(
             intervalUi = IntervalUi(
                 intervalDb = lastInterval,
-                activityDb = lastInterval.selectActivityDbCached(),
+                activityDb = Cache.requireActivity(lastInterval.activityId),
             ),
             todayTasksDb = listOf(),
             isPurple = isPurple,

@@ -200,7 +200,7 @@ class ActivityFormVm(
                     is ActivityDb.TimerType.Daytime -> timerType.dayTimeUi
                     else -> DaytimeUi(hour = 12, minute = 0)
                 },
-                colorRgba = initActivityDb?.colorRgba ?: ActivityDb.nextColorCached(),
+                colorRgba = initActivityDb?.colorRgba ?: Cache.nextActivityColor(),
                 keepScreenOn = initActivityDb?.keepScreenOn ?: true,
                 pomodoroTimer = initActivityDb?.pomodoro_timer ?: (5 * 60),
                 timerHints = initActivityDb?.buildTimerHints() ?: emptyList(),

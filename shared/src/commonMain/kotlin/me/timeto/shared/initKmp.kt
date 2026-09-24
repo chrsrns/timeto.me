@@ -96,6 +96,6 @@ internal fun initKmp(
     SystemInfo.instance = systemInfo
     TimeFlows.launchFlows()
     initKmpDeferred = ioScope().async {
-        Cache.init()
+        Cache.awaitReady()
     }
 }

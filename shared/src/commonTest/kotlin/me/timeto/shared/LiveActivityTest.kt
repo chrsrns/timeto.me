@@ -22,51 +22,51 @@ class LiveActivityTest {
     @Test
     fun timerType_noNote_isStopwatch() {
         try {
-            Cache.activitiesDb = listOf(testActivityDb(id = 1, name = "Running"))
+            Cache.overrideListsForTesting(activitiesDb = listOf(testActivityDb(id = 1, name = "Running")))
             val live = LiveActivity(testIntervalDb(note = null))
             val timerType = live.timerType
             assertIs<IntervalDb.TimerType.Stopwatch>(timerType)
         } finally {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
         }
     }
 
     @Test
     fun dynamicIslandTitle_prefersNote() {
         try {
-            Cache.activitiesDb = listOf(testActivityDb(id = 7, name = "Running"))
+            Cache.overrideListsForTesting(activitiesDb = listOf(testActivityDb(id = 7, name = "Running")))
             val live = LiveActivity(
                 testIntervalDb(activityId = 7, note = "morning jog"),
             )
             assertEquals("morning jog", live.dynamicIslandTitle)
         } finally {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
         }
     }
 
     @Test
     fun dynamicIslandTitle_fallsBackToActivityName() {
         try {
-            Cache.activitiesDb = listOf(testActivityDb(id = 7, name = "Running"))
+            Cache.overrideListsForTesting(activitiesDb = listOf(testActivityDb(id = 7, name = "Running")))
             val live = LiveActivity(
                 testIntervalDb(activityId = 7, note = null),
             )
             assertEquals("Running", live.dynamicIslandTitle)
         } finally {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
         }
     }
 
     @Test
     fun dynamicIslandTitle_blankNote_fallsBack() {
         try {
-            Cache.activitiesDb = listOf(testActivityDb(id = 7, name = "Running"))
+            Cache.overrideListsForTesting(activitiesDb = listOf(testActivityDb(id = 7, name = "Running")))
             val live = LiveActivity(
                 testIntervalDb(activityId = 7, note = "   "),
             )
             assertEquals("Running", live.dynamicIslandTitle)
         } finally {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
         }
     }
 }

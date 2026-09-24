@@ -29,8 +29,7 @@ class ChecklistFormItemsVm(
     override val state = MutableStateFlow(
         State(
             checklistDb = checklistDb,
-            checklistItemsUi = Cache.checklistItemsDb
-                .filter { it.list_id == checklistDb.id }
+            checklistItemsUi = Cache.checklistItems(checklistDb.id)
                 .map { ChecklistItemUi(it) },
         )
     )

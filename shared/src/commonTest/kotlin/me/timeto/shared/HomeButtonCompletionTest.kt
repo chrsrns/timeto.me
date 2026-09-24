@@ -41,46 +41,46 @@ class HomeButtonCompletionTest {
     @Test
     fun checklistGoal_allItemsChecked_completed() {
         try {
-            Cache.checklistsDb = listOf(ChecklistDb(id = 1, name = "L", reset_day = 0))
-            Cache.checklistItemsDb = listOf(
+            Cache.overrideListsForTesting(checklistsDb = listOf(ChecklistDb(id = 1, name = "L", reset_day = 0)))
+            Cache.overrideListsForTesting(checklistItemsDb = listOf(
                 ChecklistItemDb(id = 1, text = "a", list_id = 1, check_time = 1, sort = 0),
                 ChecklistItemDb(id = 2, text = "b", list_id = 1, check_time = 2, sort = 1),
-            )
+            ))
             val activityDb = testActivityDb(
                 name = "A #c1",
                 goalJson = ActivityDb.GoalType.Checklist.toJson(),
             )
             assertTrue(buildButton(activityDb).isCompleted)
         } finally {
-            Cache.checklistsDb = emptyList()
-            Cache.checklistItemsDb = emptyList()
+            Cache.overrideListsForTesting(checklistsDb = emptyList())
+            Cache.overrideListsForTesting(checklistItemsDb = emptyList())
         }
     }
 
     @Test
     fun checklistGoal_partiallyChecked_notCompleted() {
         try {
-            Cache.checklistsDb = listOf(ChecklistDb(id = 1, name = "L", reset_day = 0))
-            Cache.checklistItemsDb = listOf(
+            Cache.overrideListsForTesting(checklistsDb = listOf(ChecklistDb(id = 1, name = "L", reset_day = 0)))
+            Cache.overrideListsForTesting(checklistItemsDb = listOf(
                 ChecklistItemDb(id = 1, text = "a", list_id = 1, check_time = 1, sort = 0),
                 ChecklistItemDb(id = 2, text = "b", list_id = 1, check_time = 0, sort = 1),
-            )
+            ))
             val activityDb = testActivityDb(
                 name = "A #c1",
                 goalJson = ActivityDb.GoalType.Checklist.toJson(),
             )
             assertFalse(buildButton(activityDb).isCompleted)
         } finally {
-            Cache.checklistsDb = emptyList()
-            Cache.checklistItemsDb = emptyList()
+            Cache.overrideListsForTesting(checklistsDb = emptyList())
+            Cache.overrideListsForTesting(checklistItemsDb = emptyList())
         }
     }
 
     @Test
     fun checklistGoal_noItems_completed() {
         try {
-            Cache.checklistsDb = listOf(ChecklistDb(id = 1, name = "L", reset_day = 0))
-            Cache.checklistItemsDb = emptyList()
+            Cache.overrideListsForTesting(checklistsDb = listOf(ChecklistDb(id = 1, name = "L", reset_day = 0)))
+            Cache.overrideListsForTesting(checklistItemsDb = emptyList())
             val activityDb = testActivityDb(
                 name = "A #c1",
                 goalJson = ActivityDb.GoalType.Checklist.toJson(),
@@ -88,8 +88,8 @@ class HomeButtonCompletionTest {
             // totalCount == completedCount == 0 -> vacuously complete
             assertTrue(buildButton(activityDb).isCompleted)
         } finally {
-            Cache.checklistsDb = emptyList()
-            Cache.checklistItemsDb = emptyList()
+            Cache.overrideListsForTesting(checklistsDb = emptyList())
+            Cache.overrideListsForTesting(checklistItemsDb = emptyList())
         }
     }
 

@@ -81,12 +81,12 @@ class SummaryCalendarTest {
 private fun buildTestCalendar(
     startDaysAgo: Int = 30,
 ): List<SummaryCalendarVm.WeekUi> {
-    Cache.firstIntervalDb = IntervalDb(
+    Cache.overrideListsForTesting(firstIntervalDb = IntervalDb(
         id = 1,
         time = UnixTime().inDays(-startDaysAgo).time,
         activityId = 1,
         note = null,
-    )
+    ))
     return me.timeto.shared.vm.summary.buildCalendar()
 }
 

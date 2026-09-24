@@ -74,7 +74,7 @@ class WidgetUiBuildTest {
 
         // Checklist item read live as well.
         val checklistDb = ChecklistDb.insertWithValidation("CL", isResetOnDayStarts = false)
-        Cache.activitiesDb.first { it.id == 1 }
+        Cache.requireActivity(1)
             .updateNameWithValidation("Work #c${checklistDb.id}")
         refreshCache()
         ChecklistItemDb.insertWithValidation("item1", checklistDb, isChecked = false)

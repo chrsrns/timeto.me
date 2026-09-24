@@ -138,7 +138,7 @@ class HistoryVm : Vm<HistoryVm.State>() {
 
         val intervalsUi: List<IntervalUi> = intervalsDb.mapIndexed { idx, intervalDb ->
             val unixTime: UnixTime = intervalDb.unixTime()
-            val activityDb: ActivityDb = intervalDb.selectActivityDbCached()
+            val activityDb: ActivityDb = Cache.requireActivity(intervalDb.activityId)
 
             val finishTime: Int =
                 intervalsDb.getOrNull(idx + 1)?.time ?: nextIntervalTimeStart

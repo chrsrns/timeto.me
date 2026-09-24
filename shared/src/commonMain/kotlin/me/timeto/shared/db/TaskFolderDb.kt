@@ -128,12 +128,6 @@ data class TaskFolderDb(
     fun symbolOrDefault(): Symbol =
         Symbol.fromRawOrNull(symbol_raw) ?: Icon.IconEnum.inbox.toIcon()
 
-    fun selectActivityDbOrNullCached(): ActivityDb? {
-        if (activity_id == null)
-            return null
-        return Cache.activitiesDb.first { activity_id == it.id }
-    }
-
     @Throws(UiException::class, CancellationException::class)
     suspend fun updateWithValidation(
         sort: Int,

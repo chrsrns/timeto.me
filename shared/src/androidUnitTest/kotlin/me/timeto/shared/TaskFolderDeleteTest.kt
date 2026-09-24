@@ -27,7 +27,7 @@ class TaskFolderDeleteTest {
             folder = TaskFolderDb(2, 1, null, "Inbox", symbol.raw),
         )
         refreshCache()
-        val folderDb = Cache.taskFoldersDbSorted.first { it.id == 2 }
+        val folderDb = Cache.requireTaskFolder(2)
         val dialogs = TestDialogsManager()
 
         TaskFolderFormVm(folderDb).delete(folderDb, dialogs, onDelete = {})
@@ -53,7 +53,7 @@ class TaskFolderDeleteTest {
         )
 
         expected.forEach { (id, message) ->
-            val folderDb = Cache.taskFoldersDbSorted.first { it.id == id }
+            val folderDb = Cache.requireTaskFolder(id)
             val dialogs = TestDialogsManager()
             TaskFolderFormVm(folderDb).delete(folderDb, dialogs, onDelete = {})
             assertEquals(message, withTimeout(10_000) { dialogs.alerts.receive() }, "id=$id")
@@ -68,7 +68,7 @@ class TaskFolderDeleteTest {
         try {
             TaskFolderDb.insertNoValidation(2, 1, null, "Inbox", symbol)
             refreshCache()
-            val folderDb = Cache.taskFoldersDbSorted.first { it.id == 2 }
+            val folderDb = Cache.requireTaskFolder(2)
             val dialogs = TestDialogsManager()
             val onDelete = CompletableDeferred<Unit>()
 

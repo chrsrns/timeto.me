@@ -65,7 +65,7 @@ class TaskFoldersFormVm : Vm<TaskFoldersFormVm.State>() {
     ) {
         val title: String = run {
             val activityDb: ActivityDb? =
-                taskFolderDb.selectActivityDbOrNullCached()
+                taskFolderDb.activity_id?.let { Cache.requireActivity(it) }
             if (activityDb != null)
                 return@run taskFolderDb.name + " - " + activityDb.name.textFeatures().textNoFeatures
             taskFolderDb.name

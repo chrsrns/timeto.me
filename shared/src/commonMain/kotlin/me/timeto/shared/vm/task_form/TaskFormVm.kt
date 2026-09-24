@@ -80,10 +80,10 @@ class TaskFormVm(
             settingsLogic = run {
                 val taskFolderDb: TaskFolderDb = when (strategy) {
                     is TaskFormStrategy.NewTask -> strategy.taskFolderDb
-                    is TaskFormStrategy.EditTask -> strategy.taskDb.selectTaskFolderDbCached()
+                    is TaskFormStrategy.EditTask -> Cache.requireTaskFolder(strategy.taskDb.folder_id)
                 }
                 val taskFolderActivityDb: ActivityDb? =
-                    taskFolderDb.selectActivityDbOrNullCached()
+                    taskFolderDb.activity_id?.let { Cache.requireActivity(it) }
                 if (taskFolderActivityDb != null) {
                     SettingsLogic.FixedTaskFolderUi(
                         taskFolderDb = taskFolderDb,
@@ -227,7 +227,7 @@ class TaskFormVm(
 
             val title: String = run {
                 val activityDb: ActivityDb? =
-                    taskFolderDb.selectActivityDbOrNullCached()
+                    taskFolderDb.activity_id?.let { Cache.requireActivity(it) }
                 if (activityDb != null)
                     return@run activityDb.name.textFeatures().textNoFeatures
                 taskFolderDb.name

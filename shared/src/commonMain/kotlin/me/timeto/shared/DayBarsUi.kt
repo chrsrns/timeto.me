@@ -18,7 +18,7 @@ class DayBarsUi(
     fun buildActivityStats(
         activityDb: ActivityDb,
     ): ActivityStats {
-        val recursiveActivitiesDb = ActivityDb.selectParentRecursiveMapCached()
+        val recursiveActivitiesDb = Cache.activityDescendantsMap()
         val activityBarsUi: List<BarUi> = barsUi
             .filter { barUi ->
                 val barActivityId = barUi.intervalDb?.activityId
@@ -54,7 +54,7 @@ class DayBarsUi(
         val timeStart: Int,
         val seconds: Int,
     ) {
-        val activityDb: ActivityDb? = intervalDb?.selectActivityDbCached()
+        val activityDb: ActivityDb? = intervalDb?.let { Cache.requireActivity(it.activityId) }
         val ratio: Float = seconds.toFloat() / 86_400
         val timeFinish: Int = timeStart + seconds
     }

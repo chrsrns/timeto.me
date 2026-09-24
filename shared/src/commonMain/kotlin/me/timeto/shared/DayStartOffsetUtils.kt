@@ -15,7 +15,7 @@ object DayStartOffsetUtils {
         KvDb.KEY.DAY_START_OFFSET_SECONDS.selectOrNull().asDayStartOffsetSeconds()
 
     fun getOffsetSecondsCached(): Int =
-        KvDb.KEY.DAY_START_OFFSET_SECONDS.selectOrNullCached().asDayStartOffsetSeconds()
+        Cache.kvOrNull(KvDb.KEY.DAY_START_OFFSET_SECONDS).asDayStartOffsetSeconds()
 
     suspend fun getToday(): Int = calcDay(
         time = time(),

@@ -88,12 +88,12 @@ class SettingsVm : Vm<SettingsVm.State>() {
             checklistsDb = Cache.checklistsDb,
             shortcutsDb = Cache.shortcutsDb,
             noteFoldersDb = Cache.noteFoldersDb,
-            isZenModeEnabled = KvDb.KEY.ZEN_MODE_ENABLED.selectOrNullCached().isZenModeEnabled(),
+            isZenModeEnabled = Cache.kvOrNull(KvDb.KEY.ZEN_MODE_ENABLED).isZenModeEnabled(),
             dayStartSeconds = DayStartOffsetUtils.getOffsetSecondsCached(),
-            timerExpiredRepeatSeconds = KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS.selectOrNullCached().asTimerExpiredRepeatSeconds(),
+            timerExpiredRepeatSeconds = Cache.kvOrNull(KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS).asTimerExpiredRepeatSeconds(),
             feedbackSubject = DEFAULT_FEEDBACK_SUBJECT,
             autoBackupTimeString = prepAutoBackupTimeString(AutoBackup.lastTimeCache.value),
-            privacyEmoji = KvDb.KEY.IS_SENDING_REPORTS.selectOrNullCached().privacyEmojiOrNull(),
+            privacyEmoji = Cache.kvOrNull(KvDb.KEY.IS_SENDING_REPORTS).privacyEmojiOrNull(),
         )
     )
 
