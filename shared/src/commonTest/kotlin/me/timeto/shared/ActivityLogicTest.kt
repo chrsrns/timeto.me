@@ -259,4 +259,5 @@ private fun testActivityDb(
     color_rgba = color_rgba, keep_screen_on = keep_screen_on,
     pomodoro_timer = pomodoro_timer, checklist_hint = checklist_hint,
     timer_hints = timer_hints,
+    alarm_mode = null,
 )

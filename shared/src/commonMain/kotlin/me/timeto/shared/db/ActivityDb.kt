@@ -9,6 +9,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -49,6 +50,7 @@ data class ActivityDb(
     val pomodoro_timer: Int,
     val checklist_hint: Int,
     val timer_hints: String,
+    val alarm_mode: Int?,
 ) : Backupable__Item {
 
     companion object : Backupable__Holder {
@@ -88,6 +90,7 @@ data class ActivityDb(
             timerHints: List<Int>,
             parentActivityDb: ActivityDb?,
             type: Type,
+            alarmMode: Int?,
         ): ActivityDb = dbIo {
             assertIsValidName(name)
             db.transactionWithResult {
@@ -112,6 +115,7 @@ data class ActivityDb(
                     pomodoro_timer = pomodoroTimer,
                     checklist_hint = 0,
                     timer_hints = timerHints.joinToString(","),
+                    alarm_mode = alarmMode,
                 )
                 db.activityQueries.insert(activitySq)
                 activitySq.toDb()
@@ -142,6 +146,7 @@ data class ActivityDb(
                     pomodoro_timer = j.getInt(11),
                     checklist_hint = j.getInt(12),
                     timer_hints = j.getString(13),
+                    alarm_mode = j.getOrNull(14)?.jsonPrimitive?.intOrNull,
                 )
             )
         }
@@ -163,6 +168,9 @@ data class ActivityDb(
 
     fun buildTimerType(): TimerType =
         TimerType.build(dbValue = timer)
+
+    fun alarmModeResolved(globalDefault: Boolean): Boolean =
+        alarm_mode?.toBoolean10() ?: globalDefault
 
     fun buildTimerHints(): List<Int> = timer_hints
         .split(",")
@@ -220,6 +228,7 @@ data class ActivityDb(
         pomodoroTimer: Int,
         timerHints: List<Int>,
         parentActivityDb: ActivityDb?,
+        alarmMode: Int?,
     ): ActivityDb = dbIo {
         assertIsValidName(name)
         db.transactionWithResult {
@@ -250,6 +259,7 @@ data class ActivityDb(
                 pomodoro_timer = pomodoroTimer,
                 checklist_hint = checklist_hint,
                 timer_hints = timerHints.joinToString(","),
+                alarm_mode = alarmMode,
                 id = id,
             )
             selectAllSync().first { it.id == id }
@@ -326,6 +336,7 @@ data class ActivityDb(
         home_button_sort, color_rgba,
         keep_screen_on, pomodoro_timer,
         checklist_hint, timer_hints,
+        alarm_mode,
     ).toJsonArray()
 
     override fun backupable__update(json: JsonElement) {
@@ -345,6 +356,7 @@ data class ActivityDb(
             pomodoro_timer = j.getInt(11),
             checklist_hint = j.getInt(12),
             timer_hints = j.getString(13),
+            alarm_mode = j.getOrNull(14)?.jsonPrimitive?.intOrNull,
         )
     }
 
@@ -569,7 +581,7 @@ private fun ActivitySq.toDb() = ActivityDb(
     symbol_raw = symbol_raw, home_button_sort = home_button_sort,
     color_rgba = color_rgba, keep_screen_on = keep_screen_on,
     pomodoro_timer = pomodoro_timer, checklist_hint = checklist_hint,
-    timer_hints = timer_hints,
+    timer_hints = timer_hints, alarm_mode = alarm_mode,
 )
 
 private fun selectNextIdSync(): Int =

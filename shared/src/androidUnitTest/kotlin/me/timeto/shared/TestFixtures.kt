@@ -48,6 +48,7 @@ fun insertActivitySq(
     timer: Int = ActivityDb.TimerType.TimerPicker.dbValue,
     periodJson: String = ActivityDb.Period.Weekly().toJson().toString(),
     homeButtonSort: String = HomeButtonSort(0, 0, homeButtonsCellsCount).string,
+    alarmMode: Int? = null,
 ): ActivityDb {
     db.activityQueries.insert(
         ActivitySq(
@@ -65,6 +66,7 @@ fun insertActivitySq(
             pomodoro_timer = 0,
             checklist_hint = 0,
             timer_hints = "",
+            alarm_mode = alarmMode,
         )
     )
     return ActivityDb(
@@ -82,6 +84,7 @@ fun insertActivitySq(
         pomodoro_timer = 0,
         checklist_hint = 0,
         timer_hints = "",
+        alarm_mode = alarmMode,
     )
 }
 

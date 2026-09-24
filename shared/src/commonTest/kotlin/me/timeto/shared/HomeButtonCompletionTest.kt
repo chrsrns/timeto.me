@@ -118,6 +118,7 @@ class HomeButtonCompletionTest {
         pomodoro_timer = 0,
         checklist_hint = 0,
         timer_hints = "",
+        alarm_mode = null,
     )
 
     private fun buildButton(

@@ -35,6 +35,7 @@ internal fun initKmp(
             IntColumnAdapter,
             IntColumnAdapter,
             IntColumnAdapter,
+            IntColumnAdapter,
         ),
         ChecklistItemSQAdapter = ChecklistItemSQ.Adapter(
             IntColumnAdapter,

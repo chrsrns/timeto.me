@@ -42,5 +42,6 @@ class RepeatingFormVmTest {
         symbol_raw = "", home_button_sort = "", color_rgba = "52,199,89,255",
         keep_screen_on = 0, pomodoro_timer = 0, checklist_hint = 0,
         timer_hints = "",
+        alarm_mode = null,
     )
 }

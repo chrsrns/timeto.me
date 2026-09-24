@@ -333,6 +333,7 @@ class ActivityFormVm(
                     pomodoroTimer = state.pomodoroTimer,
                     timerHints = state.timerHints,
                     parentActivityDb = state.parentActivityUi?.activityDb,
+                    alarmMode = initActivityDb.alarm_mode,
                 )
             } else {
                 ActivityDb.insertWithValidation(
@@ -347,6 +348,7 @@ class ActivityFormVm(
                     timerHints = state.timerHints,
                     parentActivityDb = state.parentActivityUi?.activityDb,
                     type = ActivityDb.Type.general,
+                    alarmMode = null,
                 )
             }
 
