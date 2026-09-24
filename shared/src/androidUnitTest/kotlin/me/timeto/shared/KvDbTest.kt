@@ -3,8 +3,12 @@ package me.timeto.shared
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import me.timeto.shared.db.KvDb
+import me.timeto.shared.db.KvDb.Companion.asAlarmSnoozeIntervalId
+import me.timeto.shared.db.KvDb.Companion.asAlarmSnoozeSeconds
+import me.timeto.shared.db.KvDb.Companion.asAlarmSnoozeUntil
 import me.timeto.shared.db.KvDb.Companion.asDayStartOffsetSeconds
 import me.timeto.shared.db.KvDb.Companion.asTimerExpiredRepeatSeconds
+import me.timeto.shared.db.KvDb.Companion.isAlarmModeDefaultEnabled
 import me.timeto.shared.db.KvDb.Companion.isSendingReports
 import me.timeto.shared.db.KvDb.Companion.isZenModeEnabled
 import kotlin.test.Test
@@ -58,6 +62,57 @@ class KvDbTest {
         assertEquals(0, KvDb("k", "59").asTimerExpiredRepeatSeconds())
         assertEquals(0, KvDb("k", "90").asTimerExpiredRepeatSeconds())
         assertEquals(120, KvDb("k", "120").asTimerExpiredRepeatSeconds())
+    }
+
+    @Test
+    fun asAlarmSnoozeSeconds_defaultsAndValidates() {
+        assertEquals(300, null.asAlarmSnoozeSeconds())
+        assertEquals(300, KvDb("k", "abc").asAlarmSnoozeSeconds())
+        assertEquals(300, KvDb("k", "59").asAlarmSnoozeSeconds())
+        assertEquals(300, KvDb("k", "90").asAlarmSnoozeSeconds())
+        assertEquals(300, KvDb("k", "0").asAlarmSnoozeSeconds())
+        assertEquals(60, KvDb("k", "60").asAlarmSnoozeSeconds())
+        assertEquals(300, KvDb("k", "300").asAlarmSnoozeSeconds())
+        assertEquals(3_600, KvDb("k", "3600").asAlarmSnoozeSeconds())
+    }
+
+    @Test
+    fun isAlarmModeDefaultEnabled_defaultsFalse() {
+        assertFalse(null.isAlarmModeDefaultEnabled())
+        assertFalse(KvDb("k", "abc").isAlarmModeDefaultEnabled())
+        assertFalse(KvDb("k", "0").isAlarmModeDefaultEnabled())
+        assertTrue(KvDb("k", "1").isAlarmModeDefaultEnabled())
+    }
+
+    @Test
+    fun asAlarmSnoozeUntil_defaultsZero() {
+        assertEquals(0, null.asAlarmSnoozeUntil())
+        assertEquals(0, KvDb("k", "abc").asAlarmSnoozeUntil())
+        assertEquals(1_700_000_000, KvDb("k", "1700000000").asAlarmSnoozeUntil())
+    }
+
+    @Test
+    fun asAlarmSnoozeIntervalId_nullWhenAbsent() {
+        assertNull(null.asAlarmSnoozeIntervalId())
+        assertNull(KvDb("k", "abc").asAlarmSnoozeIntervalId())
+        assertEquals(7, KvDb("k", "7").asAlarmSnoozeIntervalId())
+    }
+
+    @Test
+    fun alarmKeys_roundtrip() = runBlocking {
+        initTestDb()
+
+        KvDb.KEY.ALARM_MODE_DEFAULT.upsertBoolean(true)
+        assertTrue(KvDb.KEY.ALARM_MODE_DEFAULT.selectOrNull().isAlarmModeDefaultEnabled())
+
+        KvDb.KEY.ALARM_SNOOZE_SECONDS.upsertInt(600)
+        assertEquals(600, KvDb.KEY.ALARM_SNOOZE_SECONDS.selectOrNull().asAlarmSnoozeSeconds())
+
+        KvDb.KEY.ALARM_SNOOZE_UNTIL.upsertInt(1_700_000_000)
+        assertEquals(1_700_000_000, KvDb.KEY.ALARM_SNOOZE_UNTIL.selectOrNull().asAlarmSnoozeUntil())
+
+        KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.upsertInt(3)
+        assertEquals(3, KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.selectOrNull().asAlarmSnoozeIntervalId())
     }
 
     @Test

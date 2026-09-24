@@ -65,6 +65,22 @@ data class KvDb(
             return if (seconds >= 60 && seconds % 60 == 0) seconds else 0
         }
 
+        fun KvDb?.isAlarmModeDefaultEnabled(): Boolean =
+            this?.value?.toIntOrNull()?.toBoolean10() ?: false
+
+        fun KvDb?.asAlarmSnoozeSeconds(): Int {
+            val seconds: Int = this?.value?.toIntOrNull() ?: return ALARM_SNOOZE_SECONDS_DEFAULT
+            return if (seconds >= 60 && seconds % 60 == 0) seconds else ALARM_SNOOZE_SECONDS_DEFAULT
+        }
+
+        fun KvDb?.asAlarmSnoozeUntil(): Int =
+            this?.value?.toIntOrNull() ?: 0
+
+        fun KvDb?.asAlarmSnoozeIntervalId(): Int? =
+            this?.value?.toIntOrNull()
+
+        private const val ALARM_SNOOZE_SECONDS_DEFAULT = 300
+
         suspend fun upsertIsSendingReports(isSendingReports: Boolean) {
             val time: Int = if (isSendingReports) time() else (-time())
             KEY.IS_SENDING_REPORTS.upsertInt(time)
@@ -101,7 +117,11 @@ data class KvDb(
         ZEN_MODE_CHECKLISTS_VISIBILITY,
         DOC_FORCE_READ_TIME,
         IOS_WIDGET_UPDATE_ID,
-        TIMER_EXPIRED_REPEAT_SECONDS;
+        TIMER_EXPIRED_REPEAT_SECONDS,
+        ALARM_MODE_DEFAULT,
+        ALARM_SNOOZE_SECONDS,
+        ALARM_SNOOZE_UNTIL,
+        ALARM_SNOOZE_INTERVAL_ID;
 
         // selectOrNull..
 
