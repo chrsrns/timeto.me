@@ -22,7 +22,7 @@ class TaskSortingTest {
                 tasks.sortedUi(isToday = true).map { it.taskDb.id },
             )
         } finally {
-            Cache.taskFoldersDbSorted = emptyList()
+            Cache.overrideListsForTesting(taskFoldersDbSorted = emptyList())
         }
     }
 
@@ -39,7 +39,7 @@ class TaskSortingTest {
                 tasks.sortedUi(isToday = true).map { it.taskDb.id },
             )
         } finally {
-            Cache.taskFoldersDbSorted = emptyList()
+            Cache.overrideListsForTesting(taskFoldersDbSorted = emptyList())
         }
     }
 
@@ -57,16 +57,16 @@ class TaskSortingTest {
                 tasks.sortedUi(isToday = false).map { it.taskDb.id },
             )
         } finally {
-            Cache.taskFoldersDbSorted = emptyList()
+            Cache.overrideListsForTesting(taskFoldersDbSorted = emptyList())
         }
     }
 }
 
 // #e<10 digits> parses to a FromEvent time used for today ordering.
 private fun seedTodayFolder() {
-    Cache.taskFoldersDbSorted = listOf(
+    Cache.overrideListsForTesting(taskFoldersDbSorted = listOf(
         TaskFolderDb(id = 1, sort = 1, activity_id = null, name = "Today", symbol_raw = ""),
-    )
+    ))
 }
 
 private fun testTaskUi(

@@ -245,7 +245,7 @@ class RepeatingPeriodTest {
     @Test
     fun prepTextForTask_emitsRepeatingToken() {
         try {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
             val day = 20_500
             val repeating = testRepeatingDb(
                 id = 1_700_000_000,
@@ -263,14 +263,14 @@ class RepeatingPeriodTest {
             assertEquals(expectedTime, parsed.time)
             assertEquals("jog", text.textFeatures().textNoFeatures)
         } finally {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
         }
     }
 
     @Test
     fun prepTextForTask_noDaytime_trailingUnderscore() {
         try {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
             val text = testRepeatingDb(
                 id = 1_700_000_000,
                 text = "jog",
@@ -283,14 +283,14 @@ class RepeatingPeriodTest {
             assertEquals(20_500, parsed.day)
             assertNull(parsed.time)
         } finally {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
         }
     }
 
     @Test
     fun prepTextForTask_important_addsToken() {
         try {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
             val text = testRepeatingDb(
                 id = 1_700_000_000,
                 text = "jog",
@@ -298,7 +298,7 @@ class RepeatingPeriodTest {
             ).prepTextForTask(20_500)
             assertTrue(text.textFeatures().isImportant)
         } finally {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
         }
     }
 

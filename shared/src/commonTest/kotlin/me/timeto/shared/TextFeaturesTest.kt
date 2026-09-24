@@ -69,28 +69,28 @@ class TextFeaturesTest {
     @Test
     fun checklistToken_resolvedAndStripped() {
         try {
-            Cache.checklistsDb = listOf(
+            Cache.overrideListsForTesting(checklistsDb = listOf(
                 ChecklistDb(id = 1, name = "a", reset_day = 0),
                 ChecklistDb(id = 2, name = "b", reset_day = 0),
-            )
+            ))
             val tf = "morning #c1 and #c2".textFeatures()
             assertEquals(listOf(1, 2), tf.checklistsDb.map { it.id })
             assertEquals("morning and", tf.textNoFeatures)
         } finally {
-            Cache.checklistsDb = emptyList()
+            Cache.overrideListsForTesting(checklistsDb = emptyList())
         }
     }
 
     @Test
     fun checklistToken_missingId_droppedFromParse() {
         try {
-            Cache.checklistsDb = listOf(ChecklistDb(id = 1, name = "a", reset_day = 0))
+            Cache.overrideListsForTesting(checklistsDb = listOf(ChecklistDb(id = 1, name = "a", reset_day = 0)))
             val tf = "x #c99 y".textFeatures()
             assertTrue(tf.checklistsDb.isEmpty())
             // Token is not cleaned — stays in the raw text
             assertEquals("x #c99 y", tf.textNoFeatures)
         } finally {
-            Cache.checklistsDb = emptyList()
+            Cache.overrideListsForTesting(checklistsDb = emptyList())
         }
     }
 
@@ -99,11 +99,11 @@ class TextFeaturesTest {
         // Parse level: a checklist referencing its own id resolves fine;
         // cycle prevention is a navigation concern, not a parse one.
         try {
-            Cache.checklistsDb = listOf(ChecklistDb(id = 1, name = "a", reset_day = 0))
+            Cache.overrideListsForTesting(checklistsDb = listOf(ChecklistDb(id = 1, name = "a", reset_day = 0)))
             val tf = "#c1".textFeatures()
             assertEquals(listOf(1), tf.checklistsDb.map { it.id })
         } finally {
-            Cache.checklistsDb = emptyList()
+            Cache.overrideListsForTesting(checklistsDb = emptyList())
         }
     }
 

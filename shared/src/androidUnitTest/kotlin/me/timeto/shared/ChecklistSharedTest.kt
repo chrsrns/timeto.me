@@ -21,7 +21,7 @@ class ChecklistSharedTest {
         refreshCache()
 
         fun checklistsFor(activityId: Int) =
-            Cache.activitiesDb.first { it.id == activityId }.name.textFeatures().checklistsDb
+            Cache.requireActivity(activityId).name.textFeatures().checklistsDb
 
         // Both activities resolve the same checklist with the same items.
         assertEquals(listOf(1), checklistsFor(1).map { it.id })

@@ -13,20 +13,34 @@ import me.timeto.shared.db.*
 object Cache {
 
     var checklistsDb = listOf<ChecklistDb>()
+        private set
     var checklistItemsDb = listOf<ChecklistItemDb>()
+        private set
     var shortcutsDb = listOf<ShortcutDb>()
+        private set
     var notesDb = listOf<NoteDb>()
+        private set
     var noteFoldersDb = listOf<NoteFolderDb>()
+        private set
     var kvDb = listOf<KvDb>()
+        private set
     var tasksDb = listOf<TaskDb>()
+        private set
     var taskFoldersDbSorted = listOf<TaskFolderDb>()
+        private set
     var eventsDb = listOf<EventDb>()
+        private set
     var eventTemplatesDbSorted = listOf<EventTemplateDb>()
+        private set
     var repeatingsDb = listOf<RepeatingDb>()
+        private set
     var activitiesDb = listOf<ActivityDb>()
+        private set
 
     lateinit var firstIntervalDb: IntervalDb
+        private set
     lateinit var lastIntervalDb: IntervalDb
+        private set
 
     //
     // Late Init
@@ -43,8 +57,11 @@ object Cache {
     ///
 
     lateinit var todayTaskFolderDb: TaskFolderDb
+        private set
     lateinit var tomorrowTaskFolderDb: TaskFolderDb
+        private set
     lateinit var somedayTaskFolderDb: TaskFolderDb
+        private set
 
     //
     // Readiness
@@ -161,6 +178,36 @@ object Cache {
     fun checklistItems(listId: Int): List<ChecklistItemDb> =
         checklistItemsDb.filter { it.list_id == listId }
 
+    private var checklistIndexCache: Pair<List<ChecklistDb>, Map<Int, ChecklistDb>>? = null
+
+    private fun checklistIndex(): Map<Int, ChecklistDb> {
+        val list = checklistsDb
+        val cached = checklistIndexCache
+        if (cached != null && cached.first === list)
+            return cached.second
+        val index = list.associateBy { it.id }
+        checklistIndexCache = list to index
+        return index
+    }
+
+    fun checklistOrNull(id: Int): ChecklistDb? =
+        checklistIndex()[id]
+
+    private var shortcutIndexCache: Pair<List<ShortcutDb>, Map<Int, ShortcutDb>>? = null
+
+    private fun shortcutIndex(): Map<Int, ShortcutDb> {
+        val list = shortcutsDb
+        val cached = shortcutIndexCache
+        if (cached != null && cached.first === list)
+            return cached.second
+        val index = list.associateBy { it.id }
+        shortcutIndexCache = list to index
+        return index
+    }
+
+    fun shortcutOrNull(id: Int): ShortcutDb? =
+        shortcutIndex()[id]
+
     private var kvIndexCache: Pair<List<KvDb>, Map<String, KvDb>>? = null
 
     private fun kvIndex(): Map<String, KvDb> {
@@ -178,6 +225,50 @@ object Cache {
 
     fun kvStringOrNull(key: KvDb.KEY): String? =
         kvOrNull(key)?.value
+
+    //
+    // Test seam
+    //
+    // Lists are read-only outside `Cache`. Tests that need arbitrary in-memory
+    // state (no DB) set it here; a null argument leaves that list unchanged.
+
+    internal fun overrideListsForTesting(
+        checklistsDb: List<ChecklistDb>? = null,
+        checklistItemsDb: List<ChecklistItemDb>? = null,
+        shortcutsDb: List<ShortcutDb>? = null,
+        notesDb: List<NoteDb>? = null,
+        noteFoldersDb: List<NoteFolderDb>? = null,
+        kvDb: List<KvDb>? = null,
+        tasksDb: List<TaskDb>? = null,
+        taskFoldersDbSorted: List<TaskFolderDb>? = null,
+        eventsDb: List<EventDb>? = null,
+        eventTemplatesDbSorted: List<EventTemplateDb>? = null,
+        repeatingsDb: List<RepeatingDb>? = null,
+        activitiesDb: List<ActivityDb>? = null,
+        firstIntervalDb: IntervalDb? = null,
+        lastIntervalDb: IntervalDb? = null,
+        todayTaskFolderDb: TaskFolderDb? = null,
+        tomorrowTaskFolderDb: TaskFolderDb? = null,
+        somedayTaskFolderDb: TaskFolderDb? = null,
+    ) {
+        checklistsDb?.let { this.checklistsDb = it }
+        checklistItemsDb?.let { this.checklistItemsDb = it }
+        shortcutsDb?.let { this.shortcutsDb = it }
+        notesDb?.let { this.notesDb = it }
+        noteFoldersDb?.let { this.noteFoldersDb = it }
+        kvDb?.let { this.kvDb = it }
+        tasksDb?.let { this.tasksDb = it }
+        taskFoldersDbSorted?.let { this.taskFoldersDbSorted = it }
+        eventsDb?.let { this.eventsDb = it }
+        eventTemplatesDbSorted?.let { this.eventTemplatesDbSorted = it }
+        repeatingsDb?.let { this.repeatingsDb = it }
+        activitiesDb?.let { this.activitiesDb = it }
+        firstIntervalDb?.let { this.firstIntervalDb = it }
+        lastIntervalDb?.let { this.lastIntervalDb = it }
+        todayTaskFolderDb?.let { this.todayTaskFolderDb = it }
+        tomorrowTaskFolderDb?.let { this.tomorrowTaskFolderDb = it }
+        somedayTaskFolderDb?.let { this.somedayTaskFolderDb = it }
+    }
 
     //
     // Init

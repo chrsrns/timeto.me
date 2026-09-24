@@ -53,12 +53,12 @@ private fun testState(
     finish: UnixTime,
 ): SummaryVm.State {
     // State.minPickerTime reads the lateinit cache entry
-    Cache.firstIntervalDb = IntervalDb(
+    Cache.overrideListsForTesting(firstIntervalDb = IntervalDb(
         id = 1,
         time = 1_000_000,
         activityId = 1,
         note = null,
-    )
+    ))
     return SummaryVm.State(
         pickerTimeStart = start,
         pickerTimeFinish = finish,

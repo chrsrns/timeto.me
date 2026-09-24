@@ -122,7 +122,7 @@ class TaskDbTest {
         val taskDb = TaskDb.selectAsc().first()
 
         taskDb.updateFolder(
-            taskFolderDb = Cache.taskFoldersDbSorted.first { it.id == 2 },
+            taskFolderDb = Cache.requireTaskFolder(2),
             updateFolderActivity = false,
             replaceIfTmrw = true,
         )

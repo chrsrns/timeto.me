@@ -13,7 +13,7 @@ class TaskMiscTest {
     fun danglingGoalToken_parsesToNull() {
         // Deleting an activity does not rewrite task texts; the
         // surviving {{goal_<id>}} token must parse to null.
-        Cache.activitiesDb = emptyList()
+        Cache.overrideListsForTesting(activitiesDb = emptyList())
         val tf = "buy milk {{goal_999}}".textFeatures()
         assertNull(tf.activityDb)
         assertEquals("buy milk {{goal_999}}", tf.textNoFeatures)
@@ -21,7 +21,7 @@ class TaskMiscTest {
 
     @Test
     fun requireTaskFolder_missingFolder_throws() {
-        Cache.taskFoldersDbSorted = listOf(
+        Cache.overrideListsForTesting(taskFoldersDbSorted = listOf(
             TaskFolderDb(
                 id = TaskFolderDb.ID_TODAY,
                 sort = 0,
@@ -29,7 +29,7 @@ class TaskMiscTest {
                 name = "Today",
                 symbol_raw = Symbol.Icon.IconEnum.inbox.toIcon().raw,
             )
-        )
+        ))
         val taskDb = TaskDb(id = 1, folder_id = 999, text = "x")
         assertFailsWith<NoSuchElementException> {
             Cache.requireTaskFolder(taskDb.folder_id)
@@ -45,7 +45,7 @@ class TaskMiscTest {
             name = "Today",
             symbol_raw = Symbol.Icon.IconEnum.inbox.toIcon().raw,
         )
-        Cache.taskFoldersDbSorted = listOf(folderDb)
+        Cache.overrideListsForTesting(taskFoldersDbSorted = listOf(folderDb))
         val taskDb = TaskDb(id = 1, folder_id = TaskFolderDb.ID_TODAY, text = "x")
         assertEquals(folderDb, Cache.requireTaskFolder(taskDb.folder_id))
     }

@@ -49,7 +49,7 @@ class DayStartOffsetTest {
     @Test
     fun daytimeToTime_zeroOffset_landsToday() {
         try {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
             val today = UnixTime().localDay
             val expected = UnixTime.byLocalDay(today).localDayStartTime() + 3_600
             assertEquals(
@@ -57,7 +57,7 @@ class DayStartOffsetTest {
                 testRepeatingForDaytime(daytime = 3_600).daytimeToTimeWithDayStart(today),
             )
         } finally {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
         }
     }
 
@@ -73,7 +73,7 @@ class DayStartOffsetTest {
                 repeating.daytimeToTimeWithDayStart(today),
             )
         } finally {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
         }
     }
 
@@ -87,7 +87,7 @@ class DayStartOffsetTest {
                 testRepeatingForDaytime(daytime = 7_200).daytimeToTimeWithDayStart(today),
             )
         } finally {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
         }
     }
 
@@ -107,13 +107,13 @@ class DayStartOffsetTest {
                 testRepeatingForDaytime(daytime = 3_600).daytimeToTimeWithDayStart(today),
             )
         } finally {
-            Cache.kvDb = emptyList()
+            Cache.overrideListsForTesting(kvDb = emptyList())
         }
     }
 }
 
 private fun seedDayStartOffset(seconds: Int) {
-    Cache.kvDb = listOf(KvDb("DAY_START_OFFSET_SECONDS", seconds.toString()))
+    Cache.overrideListsForTesting(kvDb = listOf(KvDb("DAY_START_OFFSET_SECONDS", seconds.toString())))
 }
 
 private fun testRepeatingForDaytime(

@@ -192,39 +192,39 @@ class ActivityLogicTest {
     @Test
     fun nextActivityColor_emptyCache_returnsFirstPaletteColor() {
         try {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
             assertEquals("52,199,89,255", Cache.nextActivityColor().toRgbaString())
         } finally {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
         }
     }
 
     @Test
     fun nextActivityColor_firstColorUsed_returnsNextUnused() {
         try {
-            Cache.activitiesDb = listOf(testActivityDb(color_rgba = "52,199,89,255"))
+            Cache.overrideListsForTesting(activitiesDb = listOf(testActivityDb(color_rgba = "52,199,89,255")))
             assertEquals("0,122,255,255", Cache.nextActivityColor().toRgbaString())
 
-            Cache.activitiesDb = listOf(
+            Cache.overrideListsForTesting(activitiesDb = listOf(
                 testActivityDb(id = 1, color_rgba = "52,199,89,255"),
                 testActivityDb(id = 2, color_rgba = "0,122,255,255"),
-            )
+            ))
             assertEquals("255,59,48,255", Cache.nextActivityColor().toRgbaString())
         } finally {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
         }
     }
 
     @Test
     fun nextActivityColor_allColorsUsed_returnsPaletteMember() {
         try {
-            Cache.activitiesDb = paletteRgbaStrings.mapIndexed { idx, rgba ->
+            Cache.overrideListsForTesting(activitiesDb = paletteRgbaStrings.mapIndexed { idx, rgba ->
                 testActivityDb(id = idx + 1, color_rgba = rgba)
-            }
+            })
             val picked = Cache.nextActivityColor().toRgbaString()
             assertTrue(picked in paletteRgbaStrings, "picked=$picked")
         } finally {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
         }
     }
 }

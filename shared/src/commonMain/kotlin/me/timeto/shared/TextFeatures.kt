@@ -213,7 +213,7 @@ private fun parseLocal(initText: String): TextFeatures {
         .mapNotNull { match ->
             val id = match.groupValues[1].toInt()
             val checklistDb: ChecklistDb =
-                Cache.checklistsDb.firstOrNull { it.id == id } ?: return@mapNotNull null
+                Cache.checklistOrNull(id) ?: return@mapNotNull null
             match.clean()
             checklistDb
         }
@@ -224,7 +224,7 @@ private fun parseLocal(initText: String): TextFeatures {
         .mapNotNull { match ->
             val id = match.groupValues[1].toInt()
             val shortcutDb: ShortcutDb =
-                Cache.shortcutsDb.firstOrNull { it.id == id } ?: return@mapNotNull null
+                Cache.shortcutOrNull(id) ?: return@mapNotNull null
             match.clean()
             shortcutDb
         }
@@ -250,7 +250,7 @@ private fun parseLocal(initText: String): TextFeatures {
         .find(textNoFeatures)?.let { match ->
             val id: Int = match.groupValues[1].toInt()
             val activityDb: ActivityDb =
-                Cache.activitiesDb.firstOrNull { it.id == id } ?: return@let null
+                Cache.activityOrNull(id) ?: return@let null
             match.clean()
             return@let activityDb
         }

@@ -10,7 +10,7 @@ class NoteFolderCacheTest {
 
     @Test
     fun requireNoteFolder_missingFolder_throws() {
-        Cache.noteFoldersDb = emptyList()
+        Cache.overrideListsForTesting(noteFoldersDb = emptyList())
         val noteDb = NoteDb(id = 1, time = 1, sort = 0, folderId = 99, text = "x")
         assertFailsWith<NoSuchElementException> {
             Cache.requireNoteFolder(noteDb.folderId)
@@ -23,9 +23,9 @@ class NoteFolderCacheTest {
             id = 5, time = 1, sort = 0, onHome = true,
             symbol_raw = "icon--inbox", name = "Notes",
         )
-        Cache.noteFoldersDb = listOf(folderDb)
+        Cache.overrideListsForTesting(noteFoldersDb = listOf(folderDb))
         val noteDb = NoteDb(id = 1, time = 1, sort = 0, folderId = 5, text = "x")
         assertEquals(folderDb, Cache.requireNoteFolder(noteDb.folderId))
-        Cache.noteFoldersDb = emptyList()
+        Cache.overrideListsForTesting(noteFoldersDb = emptyList())
     }
 }

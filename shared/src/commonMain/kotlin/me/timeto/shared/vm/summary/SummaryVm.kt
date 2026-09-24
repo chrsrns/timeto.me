@@ -207,7 +207,7 @@ internal fun prepActivitiesUi(
         recursiveMapGoalSeconds
             .map { (activityId, seconds) ->
                 val activityDb: ActivityDb =
-                    Cache.activitiesDb.first { it.id == activityId }
+                    Cache.requireActivity(activityId)
                 SummaryVm.ActivityUi(
                     activityDb = activityDb,
                     seconds = seconds,

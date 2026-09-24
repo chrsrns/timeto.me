@@ -89,7 +89,7 @@ class HomeVm : Vm<HomeVm.State>() {
         )
 
         val widgetNewTaskFormLogic = TaskFormStrategy.NewTask(
-            activityDb = Cache.activitiesDb.first { it.isOther },
+            activityDb = Cache.requireActivityByType(ActivityDb.Type.other),
             taskFolderDb = Cache.todayTaskFolderDb,
         )
 
@@ -356,8 +356,7 @@ class HomeVm : Vm<HomeVm.State>() {
     }
 
     fun updateTaskFolderById(taskFolderId: Int) {
-        val taskFolderUi: TaskFolderUi = Cache.taskFoldersDbSorted
-            .first { it.id == taskFolderId }
+        val taskFolderUi: TaskFolderUi = Cache.requireTaskFolder(taskFolderId)
             .let { TaskFolderUi(it, it.activity_id?.let { activityId -> Cache.requireActivity(activityId) }) }
         updateTaskFolder(taskFolderUi)
     }
@@ -369,8 +368,7 @@ class HomeVm : Vm<HomeVm.State>() {
     }
 
     fun updateNoteFolderById(noteFolderId: Int) {
-        val noteFolderUi: NoteFolderUi = Cache.noteFoldersDb
-            .first { it.id == noteFolderId }
+        val noteFolderUi: NoteFolderUi = Cache.requireNoteFolder(noteFolderId)
             .let { NoteFolderUi(it) }
         updateNoteFolder(noteFolderUi)
     }

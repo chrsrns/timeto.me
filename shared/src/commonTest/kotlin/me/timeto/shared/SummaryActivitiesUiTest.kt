@@ -11,7 +11,7 @@ class SummaryActivitiesUiTest {
     @Test
     fun ratio_includesGapsInDenominator() {
         try {
-            Cache.activitiesDb = listOf(testActivity(1))
+            Cache.overrideListsForTesting(activitiesDb = listOf(testActivity(1)))
             // 3600s interval, 7200s gap, 1800s interval
             val day = dayBars(
                 bar(interval(1, 1), 0, 3_600),
@@ -31,14 +31,14 @@ class SummaryActivitiesUiTest {
             assertEquals("1h 30m / day", ui.perDayString)
             assertEquals("1h 30m", ui.totalTimeString)
         } finally {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
         }
     }
 
     @Test
     fun secondsPerDay_dividesByActiveDays() {
         try {
-            Cache.activitiesDb = listOf(testActivity(1))
+            Cache.overrideListsForTesting(activitiesDb = listOf(testActivity(1)))
             val day1 = dayBars(bar(interval(1, 1), 0, 3_600))
             val day2 = dayBars(bar(interval(2, 1), 86_400, 3_600))
             val ui = prepActivitiesUi(listOf(day1, day2)).first()
@@ -48,7 +48,7 @@ class SummaryActivitiesUiTest {
             assertEquals("1h / day", ui.perDayString)
             assertEquals("2h", ui.totalTimeString)
         } finally {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
         }
     }
 
@@ -58,7 +58,7 @@ class SummaryActivitiesUiTest {
             val parent = testActivity(1, name = "P")
             val child = testActivity(2, parentId = 1, name = "C")
             val other = testActivity(3, name = "Q")
-            Cache.activitiesDb = listOf(parent, child, other)
+            Cache.overrideListsForTesting(activitiesDb = listOf(parent, child, other))
 
             val day = dayBars(
                 bar(interval(1, 1), 0, 100),
@@ -77,7 +77,7 @@ class SummaryActivitiesUiTest {
             assertEquals(2, parentUi.children[0].activityDb.id)
             assertEquals(50, parentUi.children[0].seconds)
         } finally {
-            Cache.activitiesDb = emptyList()
+            Cache.overrideListsForTesting(activitiesDb = emptyList())
         }
     }
 
