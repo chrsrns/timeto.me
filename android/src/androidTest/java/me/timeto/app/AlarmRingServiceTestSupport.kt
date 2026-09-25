@@ -6,6 +6,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.runBlocking
+import me.timeto.shared.db.KvDb
 import org.junit.Assert.fail
 
 /**
@@ -49,6 +51,15 @@ object AlarmRingServiceTestSupport {
             found != null
         }
         return found!!
+    }
+
+    /**
+     * Instrumented tests share the app's real database, so a test that writes a
+     * snooze deadline has to take it back out again.
+     */
+    fun clearSnoozeKeys() = runBlocking {
+        KvDb.KEY.ALARM_SNOOZE_UNTIL.delete()
+        KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.delete()
     }
 
     /** Preparation is asynchronous, so success has to be awaited, not assumed. */

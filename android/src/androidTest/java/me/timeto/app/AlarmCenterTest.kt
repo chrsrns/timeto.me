@@ -35,6 +35,7 @@ class AlarmCenterTest {
     fun tearDown() {
         AlarmRingService.stop(context)
         AlarmRingServiceTestSupport.awaitNotRunning()
+        AlarmRingServiceTestSupport.clearSnoozeKeys()
     }
 
     private fun alarmNotification(
