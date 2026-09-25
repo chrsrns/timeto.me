@@ -3,6 +3,8 @@ package me.timeto.shared
 import kotlinx.coroutines.flow.MutableSharedFlow
 import me.timeto.shared.db.IntervalDb
 import me.timeto.shared.db.KvDb
+import me.timeto.shared.db.KvDb.Companion.asAlarmSnoozeIntervalId
+import me.timeto.shared.db.KvDb.Companion.asAlarmSnoozeUntil
 import me.timeto.shared.db.KvDb.Companion.asTimerExpiredRepeatSeconds
 import me.timeto.shared.db.KvDb.Companion.isAlarmModeDefaultEnabled
 
@@ -130,11 +132,23 @@ private suspend fun rescheduleNotifications() {
     }
 
     if (alarmTimerType != null) {
+        /**
+         * A snooze deadline survives reschedules, but only while it still belongs
+         * to the running interval and that interval is still expired. Otherwise a
+         * stale deadline could ring a timer that has since been restarted.
+         */
+        val snoozeUntil: Int = KvDb.KEY.ALARM_SNOOZE_UNTIL.selectOrNull().asAlarmSnoozeUntil()
+        val isSnoozeActive: Boolean =
+            KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.selectOrNull().asAlarmSnoozeIntervalId() == lastIntervalDb.id &&
+                    snoozeUntil > now &&
+                    alarmTimerType.isFinished(now)
+
         notifications.add(
             NotificationAlarm(
                 title = "Time Is Over ⏰",
                 text = alarmTimerType.buildExpiredString(),
-                inSeconds = maxOf(0, alarmTimerType.finishTime - now),
+                inSeconds = if (isSnoozeActive) maxOf(0, snoozeUntil - now)
+                else maxOf(0, alarmTimerType.finishTime - now),
                 type = NotificationAlarm.Type.Alarm(intervalId = lastIntervalDb.id),
                 liveActivity = liveActivity,
             ),
