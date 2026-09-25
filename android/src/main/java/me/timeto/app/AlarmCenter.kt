@@ -67,6 +67,14 @@ object AlarmCenter {
         intervalId: Int,
         inSeconds: Int,
     ) {
+        // A due alarm that is already ringing has nothing to re-arm. Without this
+        // every reschedule re-arms it at "now", and the system fires it again
+        // immediately: a user-visible alarm churning while the ring is up.
+        if (inSeconds <= 0 &&
+            AlarmRingService.isRunning &&
+            AlarmRingService.ringingIntervalId == intervalId
+        ) return
+
         armedAlarmIntervalId = intervalId
         val context = App.instance
         val pIntent = buildAlarmRingPendingIntent(context)
