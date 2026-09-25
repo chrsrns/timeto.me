@@ -17,9 +17,14 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import kotlinx.coroutines.launch
 import me.timeto.shared.NotificationAlarm
+import me.timeto.shared.db.KvDb
+import me.timeto.shared.db.KvDb.Companion.asAlarmSnoozeSeconds
 import me.timeto.shared.getSoundTimerExpiredFileName
+import me.timeto.shared.ioScope
 import me.timeto.shared.reportApi
+import me.timeto.shared.time
 
 /**
  * Owns the ongoing alarm: a looping alarm-stream player plus vibration, kept
@@ -69,6 +74,10 @@ class AlarmRingService : Service() {
             context.startForegroundService(buildIntent(context, ACTION_START, intervalId))
         }
 
+        fun snooze(context: Context, intervalId: Int) {
+            context.startForegroundService(buildIntent(context, ACTION_SNOOZE, intervalId))
+        }
+
         fun stop(context: Context) {
             context.stopService(buildIntent(context, ACTION_STOP))
         }
@@ -88,6 +97,10 @@ class AlarmRingService : Service() {
                 stopSelf()
                 return START_NOT_STICKY
             }
+            ACTION_SNOOZE -> {
+                snooze(intent.getIntExtra(EXTRA_INTERVAL_ID, 0))
+                return START_NOT_STICKY
+            }
         }
 
         val intervalId: Int = intent?.getIntExtra(EXTRA_INTERVAL_ID, 0) ?: 0
@@ -97,7 +110,7 @@ class AlarmRingService : Service() {
         if (isRunning && ringingIntervalId == intervalId)
             return START_NOT_STICKY
 
-        startForeground()
+        startForegroundWithNotification(intervalId)
 
         if (isRunning)
             releasePlayback()
@@ -111,6 +124,34 @@ class AlarmRingService : Service() {
         return START_NOT_STICKY
     }
 
+    /**
+     * Writes the deadline before cancelling and silencing anything: a reschedule
+     * landing in between then sees the snooze and re-arms it instead of ringing
+     * immediately.
+     *
+     * The next alarm is armed here rather than left to the emitted list, because
+     * the app may have no activity alive to consume it while ringing in the
+     * background.
+     */
+    private fun snooze(intervalId: Int) {
+        val scope = ioScope()
+        scope.launch {
+            try {
+                val snoozeSeconds: Int =
+                    KvDb.KEY.ALARM_SNOOZE_SECONDS.selectOrNull().asAlarmSnoozeSeconds()
+                KvDb.KEY.ALARM_SNOOZE_UNTIL.upsertInt(time() + snoozeSeconds)
+                KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.upsertInt(intervalId)
+
+                AlarmCenter.cancelAlarmRing()
+                AlarmCenter.scheduleAlarmRing(intervalId = intervalId, inSeconds = snoozeSeconds)
+
+                stopSelf()
+            } catch (e: Throwable) {
+                reportApi("AlarmRingService.snooze():$e")
+            }
+        }
+    }
+
     override fun onDestroy() {
         releasePlayback()
         isRunning = false
@@ -120,8 +161,8 @@ class AlarmRingService : Service() {
 
     ///
 
-    private fun startForeground() {
-        val notification: Notification = buildRingNotification()
+    private fun startForegroundWithNotification(intervalId: Int) {
+        val notification: Notification = buildRingNotification(intervalId)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceCompat.startForeground(
                 this,
@@ -134,7 +175,7 @@ class AlarmRingService : Service() {
         }
     }
 
-    private fun buildRingNotification(): Notification {
+    private fun buildRingNotification(intervalId: Int): Notification {
         val channel = NotificationsUtils.channelTimerExpired()
         val pIntent = PendingIntent.getActivity(
             this,
@@ -144,6 +185,12 @@ class AlarmRingService : Service() {
             },
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+        val snoozeIntent = PendingIntent.getForegroundService(
+            this,
+            NotificationAlarm.REQUEST_CODE_ALARM,
+            buildIntent(this, ACTION_SNOOZE, intervalId),
+            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
         return NotificationCompat.Builder(this, channel.id)
             .setSmallIcon(R.drawable.readme_notification_alarm)
             .setColor(0x0055FF)
@@ -151,6 +198,7 @@ class AlarmRingService : Service() {
             .setContentText("Snooze or start a new activity")
             .setOngoing(true)
             .setContentIntent(pIntent)
+            .addAction(0, "Snooze", snoozeIntent)
             .build()
     }
 

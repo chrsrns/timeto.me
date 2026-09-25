@@ -206,7 +206,12 @@ class MainActivity : ComponentActivity() {
                         }
                         // Notifications Schedule
                         NotificationAlarm.flow.onEachExIn(this) { notifications ->
-                            AlarmCenter.cancelAllAlarms()
+                            // The ring keeps playing when the list still holds an
+                            // expired alarm for the interval that is ringing.
+                            AlarmCenter.cancelAllAlarms(
+                                stopRingService = true,
+                                notifications = notifications,
+                            )
                             NotificationsUtils.cleanTimerPushes()
                             notifications.forEach {
                                 AlarmCenter.scheduleNotification(it)
