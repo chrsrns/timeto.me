@@ -10,7 +10,9 @@ import me.timeto.appdbsq.TimetomeDB
  * Safe to call per test: `db` is reassigned and `Cache.init`
  * cancels the previous collector scope.
  */
-fun initTestDb(): SqlDriver {
+fun initTestDb(
+    os: SystemInfo.Os = SystemInfo.Os.Android("test"),
+): SqlDriver {
     val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
     TimetomeDB.Schema.create(driver)
     initKmp(
@@ -18,7 +20,7 @@ fun initTestDb(): SqlDriver {
         systemInfo = SystemInfo(
             build = 0,
             version = "test",
-            os = SystemInfo.Os.Android("test"),
+            os = os,
             device = "test",
             flavor = null,
         ),
