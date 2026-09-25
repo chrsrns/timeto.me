@@ -26,6 +26,10 @@ import androidx.compose.material.darkColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -43,8 +47,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import me.timeto.app.ui.LifecycleListener
 import me.timeto.app.ui.ZStack
+import me.timeto.app.ui.alarm.AlarmRingScreen
 import me.timeto.app.ui.c
 import me.timeto.app.ui.main.MainScreen
+import me.timeto.app.ui.main.MainTabEnum
+import me.timeto.app.ui.main.mainTabFlow
 import me.timeto.app.ui.navigation.LocalNavigationFs
 import me.timeto.app.ui.navigation.NavigationFs
 import me.timeto.app.ui.pxToDp
@@ -124,6 +131,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+            // Set when the ring's full-screen intent or its notification opens
+            // the app; the overlay then sits on top until the user snoozes or
+            // starts a new activity.
+            var isAlarmRingVisible by remember {
+                mutableStateOf(intent.getBooleanExtra(AlarmRingService.EXTRA_SHOW_ALARM, false))
+            }
+
             val (vm, state) = rememberVm {
                 AppVm()
             }
@@ -177,6 +191,24 @@ class MainActivity : ComponentActivity() {
                         if (isLandscape) {
                             ZenModeView()
                         }
+                    }
+
+                    // Shown over the app; opening the app must not silence the
+                    // ring, so it closes only on snooze or on starting an activity.
+                    if (isAlarmRingVisible) {
+                        AlarmRingScreen(
+                            onSnooze = {
+                                isAlarmRingVisible = false
+                                AlarmRingService.snooze(
+                                    context = this@MainActivity,
+                                    intervalId = AlarmRingService.ringingIntervalId ?: 0,
+                                )
+                            },
+                            onStart = {
+                                isAlarmRingVisible = false
+                                mainTabFlow.value = MainTabEnum.home
+                            },
+                        )
                     }
 
                     LaunchedEffect(Unit) {

@@ -1,9 +1,9 @@
 package me.timeto.app.ui.main
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.flow.MutableStateFlow
 import me.timeto.app.ui.VStack
 import me.timeto.app.ui.ZStack
 import me.timeto.app.ui.activity.ActivityScreen
@@ -11,12 +11,16 @@ import me.timeto.app.ui.home.HomeScreen
 import me.timeto.app.ui.navigation.NavigationScreen
 import me.timeto.app.ui.settings.SettingsScreen
 
+/**
+ * The selected tab is observable so an outside surface, such as the alarm
+ * screen, can deep-link to home.
+ */
+val mainTabFlow = MutableStateFlow(MainTabEnum.home)
+
 @Composable
 fun MainScreen() {
 
-    val tab = remember {
-        mutableStateOf(MainTabEnum.home)
-    }
+    val tab = mainTabFlow.collectAsState()
 
     VStack {
 
@@ -34,7 +38,7 @@ fun MainScreen() {
                     NavigationScreen {
                         ActivityScreen(
                             onClose = {
-                                tab.value = MainTabEnum.home
+                                mainTabFlow.value = MainTabEnum.home
                             },
                         )
                     }
@@ -43,7 +47,7 @@ fun MainScreen() {
                     NavigationScreen {
                         SettingsScreen(
                             onClose = {
-                                tab.value = MainTabEnum.home
+                                mainTabFlow.value = MainTabEnum.home
                             },
                         )
                     }
@@ -54,7 +58,7 @@ fun MainScreen() {
         MainTabsView(
             tab = tab.value,
             onTabChanged = { newTab ->
-                tab.value = newTab
+                mainTabFlow.value = newTab
             },
         )
     }
