@@ -34,10 +34,21 @@ class NotificationIdMappingTest {
     }
 
     @Test
+    fun alarmRequestCode_mapsToItsOwnId() {
+        assertEquals(
+            NotificationAlarm.NOTIFICATION_ID_ALARM,
+            NotificationAlarm.notificationIdForRequestCode(NotificationAlarm.REQUEST_CODE_ALARM),
+        )
+        assertEquals(5, NotificationAlarm.notificationIdForRequestCode(8))
+    }
+
+    @Test
     fun constants_expectedValues() {
         assertEquals(48, NotificationAlarm.EXPIRED_REPEAT_MAX_K)
         assertEquals(200, NotificationAlarm.EXPIRED_REPEAT_REQUEST_CODE_START)
         assertEquals(4, NotificationAlarm.EXPIRED_REPEAT_NOTIFICATION_ID)
         assertEquals(86_400, NotificationAlarm.EXPIRED_REPEAT_HORIZON_SECONDS)
+        assertEquals(8, NotificationAlarm.REQUEST_CODE_ALARM)
+        assertEquals(5, NotificationAlarm.NOTIFICATION_ID_ALARM)
     }
 }

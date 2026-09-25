@@ -1,9 +1,13 @@
 package me.timeto.shared
 
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import me.timeto.shared.db.IntervalDb
 import me.timeto.shared.db.KvDb
+import me.timeto.shared.db.KvDb.Companion.asAlarmSnoozeIntervalId
+import me.timeto.shared.db.KvDb.Companion.asAlarmSnoozeUntil
 import me.timeto.shared.db.KvDb.Companion.asTimerExpiredRepeatSeconds
+import me.timeto.shared.db.KvDb.Companion.isAlarmModeDefaultEnabled
 
 data class NotificationAlarm(
     val title: String,
@@ -29,20 +33,37 @@ data class NotificationAlarm(
         const val EXPIRED_REPEAT_REQUEST_CODE_START = 200
         const val EXPIRED_REPEAT_NOTIFICATION_ID = 4
 
+        const val REQUEST_CODE_ALARM = 8
+        const val NOTIFICATION_ID_ALARM = 5
+
         fun requestCodeFor(type: Type): Int = when (type) {
             Type.TimeToBreak -> NOTIFICATION_ID_BREAK
             Type.Overdue -> NOTIFICATION_ID_OVERDUE
             is Type.NoActivity -> NOTIFICATION_ID_NO_ACTIVITY_START + type.day
             is Type.ExpiredRepeat -> EXPIRED_REPEAT_REQUEST_CODE_START + type.k
+            is Type.Alarm -> REQUEST_CODE_ALARM
         }
 
-        fun notificationIdForRequestCode(requestCode: Int): Int =
-            if (requestCode in EXPIRED_REPEAT_REQUEST_CODE_START..(EXPIRED_REPEAT_REQUEST_CODE_START + EXPIRED_REPEAT_MAX_K))
+        fun notificationIdForRequestCode(requestCode: Int): Int = when {
+            requestCode == REQUEST_CODE_ALARM -> NOTIFICATION_ID_ALARM
+            requestCode in EXPIRED_REPEAT_REQUEST_CODE_START..(EXPIRED_REPEAT_REQUEST_CODE_START + EXPIRED_REPEAT_MAX_K) ->
                 EXPIRED_REPEAT_NOTIFICATION_ID
-            else requestCode
+            else -> requestCode
+        }
 
-        // Not StateFlow to reschedule same data object
-        val flow = MutableSharedFlow<List<NotificationAlarm>>()
+        /**
+         * Not StateFlow to reschedule same data object.
+         *
+         * Each emission is a complete snapshot of what should be scheduled, so a
+         * consumer only ever needs the newest one. Buffering with drop-oldest
+         * keeps a slow or wedged consumer from suspending the producer, which
+         * reschedules on every activity write.
+         */
+        val flow = MutableSharedFlow<List<NotificationAlarm>>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
 
         suspend fun rescheduleAll() {
             rescheduleNotifications()
@@ -56,6 +77,7 @@ data class NotificationAlarm(
         object Overdue : Type()
         data class NoActivity(val day: Int) : Type()
         data class ExpiredRepeat(val k: Int) : Type()
+        data class Alarm(val intervalId: Int) : Type()
     }
 }
 
@@ -104,32 +126,81 @@ private suspend fun rescheduleNotifications() {
 
     val notifications = mutableListOf<NotificationAlarm>()
 
+    val now: Int = time()
     val timerType = lastIntervalDb.buildTimerType()
-    if (timerType is IntervalDb.TimerType.Timer) {
-        val inSeconds: Int = timerType.finishTime - time()
-        if (inSeconds > 0) {
-            notifications.add(
-                NotificationAlarm(
-                    title = "Time Is Over ⏰",
-                    text = timerType.buildExpiredString(),
-                    inSeconds = inSeconds,
-                    type = NotificationAlarm.Type.TimeToBreak,
-                    liveActivity = liveActivity,
-                ),
-            )
-        }
+
+    /**
+     * Alarm mode replaces the one-shot break push and the repeat nag for the
+     * interval that owns them, so the user gets one ongoing alarm instead of a
+     * stream of notifications. Android only.
+     */
+    val alarmTimerType: IntervalDb.TimerType.Timer? = run {
+        if (!SystemInfo.instance.isAndroid)
+            return@run null
+        val isAlarmMode: Boolean = lastIntervalDb.selectActivityDb().alarmModeResolved(
+            globalDefault = KvDb.KEY.ALARM_MODE_DEFAULT.selectOrNull().isAlarmModeDefaultEnabled()
+        )
+        if (!isAlarmMode) null else timerType as? IntervalDb.TimerType.Timer
     }
 
-    val expiredRepeatSeconds: Int =
-        KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS.selectOrNull().asTimerExpiredRepeatSeconds()
-    notifications.addAll(
-        buildExpiredRepeatNotifications(
-            timerType = timerType,
-            repeatSeconds = expiredRepeatSeconds,
-            now = time(),
-            liveActivity = liveActivity,
+    /**
+     * A snooze deadline survives reschedules, but only while it still belongs to
+     * the running interval and that interval is still expired. Otherwise a stale
+     * deadline could ring a timer that has since been restarted, so it is dropped
+     * here rather than left for a later reschedule to pick up.
+     */
+    val snoozeUntil: Int = KvDb.KEY.ALARM_SNOOZE_UNTIL.selectOrNull().asAlarmSnoozeUntil()
+    val snoozeIntervalId: Int? = KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.selectOrNull().asAlarmSnoozeIntervalId()
+    val isSnoozeActive: Boolean =
+        (alarmTimerType != null) &&
+                (snoozeIntervalId == lastIntervalDb.id) &&
+                (snoozeUntil > now) &&
+                alarmTimerType.isFinished(now)
+
+    if ((snoozeIntervalId != null) && !isSnoozeActive) {
+        KvDb.KEY.ALARM_SNOOZE_UNTIL.delete()
+        KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.delete()
+    }
+
+    if (alarmTimerType != null) {
+        notifications.add(
+            NotificationAlarm(
+                title = "Time Is Over ⏰",
+                text = alarmTimerType.buildExpiredString(),
+                inSeconds = if (isSnoozeActive) maxOf(0, snoozeUntil - now)
+                else maxOf(0, alarmTimerType.finishTime - now),
+                type = NotificationAlarm.Type.Alarm(intervalId = lastIntervalDb.id),
+                liveActivity = liveActivity,
+            ),
         )
-    )
+    } else {
+
+        if (timerType is IntervalDb.TimerType.Timer) {
+            val inSeconds: Int = timerType.finishTime - now
+            if (inSeconds > 0) {
+                notifications.add(
+                    NotificationAlarm(
+                        title = "Time Is Over ⏰",
+                        text = timerType.buildExpiredString(),
+                        inSeconds = inSeconds,
+                        type = NotificationAlarm.Type.TimeToBreak,
+                        liveActivity = liveActivity,
+                    ),
+                )
+            }
+        }
+
+        val expiredRepeatSeconds: Int =
+            KvDb.KEY.TIMER_EXPIRED_REPEAT_SECONDS.selectOrNull().asTimerExpiredRepeatSeconds()
+        notifications.addAll(
+            buildExpiredRepeatNotifications(
+                timerType = timerType,
+                repeatSeconds = expiredRepeatSeconds,
+                now = now,
+                liveActivity = liveActivity,
+            )
+        )
+    }
 
     val oneDaySeconds = 86_400
     (1..NotificationAlarm.NO_ACTIVITY_DAYS_LIMIT).forEach { day ->

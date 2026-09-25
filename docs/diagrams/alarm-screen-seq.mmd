@@ -1,0 +1,34 @@
+```mermaid
+sequenceDiagram
+    participant AM as AlarmManager
+    participant SVC as AlarmRingService
+    participant NM as NotificationManager
+    participant OS as Android
+    participant MA as MainActivity
+
+    Note over AM,SVC: arming
+    MA->>AM: scheduleAlarmRing interval 7 with inSeconds 0
+    AM->>SVC: fires the start intent
+    Note over AM,SVC: the armed intent carries no interval id extra
+
+    Note over SVC,NM: first ring
+    SVC->>SVC: intervalId reads 0 from the default
+    SVC->>NM: startForeground posts the alarm notification
+    NM->>OS: full screen intent while locked
+    OS->>MA: launches MainActivity
+    MA->>MA: showAlarmRing sets showWhenLocked and turnScreenOn
+    SVC->>SVC: startPlayback loops sound_timer_expired
+
+    Note over MA,SVC: every reschedule after this
+    MA->>MA: producer emits Alarm with intervalId 7 and inSeconds 0
+    MA->>SVC: cancelAllAlarms stops the service unless the list matches
+    Note over MA,SVC: ringing interval reads 0 so the list never matches
+    SVC->>SVC: releasePlayback stops the audio
+    SVC->>SVC: onDestroy clears isRunning
+    MA->>AM: arms the same alarm at now
+    AM->>SVC: fires the start intent again
+    SVC->>NM: startForeground posts the notification again
+    NM->>OS: full screen intent again
+    OS->>MA: clears the task and makes a new activity
+    SVC->>SVC: startPlayback starts the audio again
+```

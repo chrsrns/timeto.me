@@ -1,0 +1,110 @@
+package me.timeto.app
+
+import android.Manifest
+import android.app.Notification
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.runBlocking
+import me.timeto.shared.db.KvDb
+import org.junit.Assert.fail
+
+/**
+ * Waiting helpers for service state. Instrumented tests must not assume the
+ * service reaches its target state on the same frame as the start call.
+ */
+object AlarmRingServiceTestSupport {
+
+    private const val TIMEOUT_MILLIS = 5_000L
+
+    /**
+     * A foreground service notification is suppressed while POST_NOTIFICATIONS is
+     * denied, so the ring would run with no notification to assert on.
+     */
+    fun grantNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
+            return
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.uiAutomation.grantRuntimePermission(
+            instrumentation.targetContext.packageName,
+            Manifest.permission.POST_NOTIFICATIONS,
+        )
+    }
+
+    fun awaitRunning(timeoutMillis: Long = TIMEOUT_MILLIS) =
+        await("service never started ringing", timeoutMillis) { AlarmRingService.isRunning }
+
+    fun awaitNotRunning() =
+        await("service never stopped ringing") { !AlarmRingService.isRunning }
+
+    /**
+     * `startForeground` hands the notification to the system asynchronously, so
+     * the active list can lag the service being up by a moment.
+     */
+    fun awaitNotification(id: Int): Notification {
+        var found: Notification? = null
+        val manager = InstrumentationRegistry.getInstrumentation().targetContext
+            .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        await("notification $id was never posted") {
+            found = manager.activeNotifications.firstOrNull { it.id == id }?.notification
+            found != null
+        }
+        return found!!
+    }
+
+    /**
+     * Instrumented tests share the app's real database, so a test that writes a
+     * snooze deadline has to take it back out again.
+     */
+    fun clearSnoozeKeys() = runBlocking {
+        KvDb.KEY.ALARM_SNOOZE_UNTIL.delete()
+        KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.delete()
+    }
+
+    /** Preparation is asynchronous, so success has to be awaited, not assumed. */
+    fun awaitPreparedAtLeast(count: Int) =
+        await("playback never reached the prepared state") { AlarmRingService.preparedCount >= count }
+
+    /**
+     * Stops the ring without racing its start. Stopping a service between
+     * startForegroundService and its startForeground call makes the system record
+     * the start as never satisfied, and the next start then kills the process.
+     * So let an in-flight start settle first, and skip the stop if nothing came up.
+     */
+    fun stopSafely(context: Context) {
+        AlarmCenter.cancelAlarmRing()
+        if (AlarmRingService.isRunning || becameRunningWithin(1_000)) {
+            AlarmRingService.stop(context)
+            awaitNotRunning()
+        }
+    }
+
+    private fun becameRunningWithin(millis: Long): Boolean {
+        val deadline = System.currentTimeMillis() + millis
+        while (System.currentTimeMillis() < deadline) {
+            if (AlarmRingService.isRunning)
+                return true
+            Thread.sleep(20)
+        }
+        return false
+    }
+
+    fun awaitSettled() {
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+    }
+
+    private fun await(
+        message: String,
+        timeoutMillis: Long = TIMEOUT_MILLIS,
+        condition: () -> Boolean,
+    ) {
+        val deadline = System.currentTimeMillis() + timeoutMillis
+        while (System.currentTimeMillis() < deadline) {
+            if (condition())
+                return
+            Thread.sleep(25)
+        }
+        fail(message)
+    }
+}

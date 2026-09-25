@@ -14,6 +14,18 @@ import kotlin.test.assertTrue
 
 class ZenModeVmTest {
 
+    /**
+     * `ZenModeVm` reads the KV value through `Cache`, which is refreshed from a
+     * flow. Polling the DB row alone can observe the write before the cache does,
+     * so the next VM would still see the stale set.
+     */
+    private suspend fun awaitCachedVisibility(expected: String) {
+        withTimeout(5_000) {
+            while (Cache.kvStringOrNull(KvDb.KEY.ZEN_MODE_CHECKLISTS_VISIBILITY) != expected)
+                delay(50)
+        }
+    }
+
     private suspend fun seedRunningInterval(activityId: Int = 7) {
         insertActivitySq(id = activityId)
         insertIntervalSq(id = 1, time = time() - 30, activityId = activityId, note = "#t600")
@@ -34,10 +46,7 @@ class ZenModeVmTest {
         }
 
         vm.hideChecklist()
-        withTimeout(5_000) {
-            while (KvDb.KEY.ZEN_MODE_CHECKLISTS_VISIBILITY.selectStringOrNull() != "7")
-                delay(50)
-        }
+        awaitCachedVisibility("7")
 
         // A fresh VM reads the persisted hidden set.
         val vm2 = ZenModeVm()
@@ -61,10 +70,7 @@ class ZenModeVmTest {
         val vm4 = ZenModeVm()
         try {
             vm4.showChecklist()
-            withTimeout(5_000) {
-                while (KvDb.KEY.ZEN_MODE_CHECKLISTS_VISIBILITY.selectStringOrNull() != "")
-                    delay(50)
-            }
+            awaitCachedVisibility("")
         } finally {
             vm4.onDestroy()
         }

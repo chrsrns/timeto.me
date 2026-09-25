@@ -90,6 +90,21 @@ class AppVm : Vm<AppVm.State>() {
                     NotificationAlarm.rescheduleAll()
                 }
 
+            KvDb.KEY.ALARM_MODE_DEFAULT
+                .selectOrNullFlow()
+                .onEachExIn(this) {
+                    NotificationAlarm.rescheduleAll()
+                }
+
+            /**
+             * Table-level: fires on every activity write, including ones that do
+             * not affect alarm mode. Cancellation must therefore be idempotent.
+             */
+            ActivityDb.anyChangeFlow()
+                .onEachExIn(this) {
+                    NotificationAlarm.rescheduleAll()
+                }
+
             DayStartOffsetUtils.buildTodayFlow().onEachExIn(this) { todayWithDayStartOffset ->
                 ChecklistDb.selectAsc().forEach { checklistDb ->
                     checklistDb.resetIfNeeded(todayWithDayStartOffset = todayWithDayStartOffset)
@@ -271,6 +286,7 @@ private suspend fun addMorningActivityAndStartInterval(): Pair<ActivityDb, Inter
         timerHints = listOf(30 * 60, 60 * 60, 60 * 60 + 30 * 60),
         parentActivityDb = null,
         type = ActivityDb.Type.general,
+        alarmMode = null,
     )
     activityDb.updateHomeButtonSort(HomeButtonSort(rowIdx = 0, cellIdx = 0, size = 2))
     // Start Goal
@@ -297,6 +313,7 @@ private suspend fun addWorkActivity(): ActivityDb {
         timerHints = listOf(60 * 60, 4 * 60 * 60, 8 * 60 * 60),
         parentActivityDb = null,
         type = ActivityDb.Type.general,
+        alarmMode = null,
     )
     activityDb.updateHomeButtonSort(HomeButtonSort(rowIdx = 0, cellIdx = 2, size = 2))
     return activityDb
@@ -315,6 +332,7 @@ private suspend fun addSmallTasksActivity(): ActivityDb {
         timerHints = listOf(30 * 60, 60 * 60),
         parentActivityDb = null,
         type = ActivityDb.Type.general,
+        alarmMode = null,
     )
     activityDb.updateHomeButtonSort(HomeButtonSort(rowIdx = 0, cellIdx = 4, size = 2))
     return activityDb
@@ -335,6 +353,7 @@ private suspend fun addReadingActivity(): ActivityDb {
         timerHints = listOf(30 * 60, 60 * 60),
         parentActivityDb = null,
         type = ActivityDb.Type.general,
+        alarmMode = null,
     )
     activityDb.updateHomeButtonSort(HomeButtonSort(rowIdx = 1, cellIdx = 0, size = 1))
     return activityDb
@@ -361,6 +380,7 @@ private suspend fun addWorkoutActivity(): ActivityDb {
         timerHints = listOf(20 * 60, 60 * 60, 3 * 60 * 60),
         parentActivityDb = null,
         type = ActivityDb.Type.general,
+        alarmMode = null,
     )
     activityDb.updateHomeButtonSort(HomeButtonSort(rowIdx = 1, cellIdx = 1, size = 1))
     return activityDb
@@ -393,6 +413,7 @@ private suspend fun addFreeTimeActivity(): ActivityDb {
         timerHints = listOf(15 * 60, 60 * 60),
         parentActivityDb = null,
         type = ActivityDb.Type.other,
+        alarmMode = null,
     )
     activityDb.updateHomeButtonSort(HomeButtonSort(rowIdx = 1, cellIdx = 2, size = 2))
     return activityDb
@@ -419,6 +440,7 @@ private suspend fun addSleepActivity(): ActivityDb {
         timerHints = listOf(60 * 60, 7 * 60 * 60),
         parentActivityDb = null,
         type = ActivityDb.Type.general,
+        alarmMode = null,
     )
     activityDb.updateHomeButtonSort(HomeButtonSort(rowIdx = 1, cellIdx = 4, size = 2))
     return activityDb

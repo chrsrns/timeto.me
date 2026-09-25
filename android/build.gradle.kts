@@ -16,6 +16,7 @@ android {
         versionCode = 623
         versionName = "2026.09.11"
         manifestPlaceholders["appLabel"] = "timeto.me"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -80,4 +81,19 @@ dependencies {
     implementation("androidx.glance:glance-appwidget:1.2.0")
     testImplementation(kotlin("test"))
     testImplementation("org.robolectric:robolectric:4.16.1")
+
+    // Instrumented tests: the alarm service, its notification, and the alarm
+    // screen need a real device (foreground services and audio are not
+    // meaningfully exercisable under Robolectric).
+    //
+    // Espresso is pinned explicitly: compose-ui-test brings 3.5.0, whose
+    // idling path calls InputManager.getInstance(), which no longer exists on
+    // current platform releases.
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test:rules:1.7.0")
+    androidTestImplementation("androidx.test:core:1.7.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.11.4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.11.4")
 }

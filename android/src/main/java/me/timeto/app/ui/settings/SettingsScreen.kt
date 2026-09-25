@@ -620,7 +620,7 @@ fun SettingsScreen(
                 FormButton(
                     title = "Repeat Expired Timer",
                     isFirst = false,
-                    isLast = true,
+                    isLast = false,
                     note = state.timerExpiredRepeatNote,
                     withArrow = true,
                     onClick = {
@@ -635,6 +635,55 @@ fun SettingsScreen(
                                 },
                                 onOff = {
                                     vm.setTimerExpiredRepeatSeconds(0)
+                                },
+                            )
+                        }
+                    },
+                )
+
+                FormSwitch(
+                    title = state.alarmModeTitle,
+                    isEnabled = state.isAlarmModeDefaultEnabled,
+                    isFirst = false,
+                    isLast = false,
+                    onChange = { newValue ->
+                        vm.setAlarmModeDefaultEnabled(enabled = newValue)
+                    },
+                )
+
+                // Only offer the prompt when the special access is actually missing:
+                // Android 14+ restricts it, and Play only auto-grants it to calling
+                // and alarm apps. Without it the ring degrades to a heads-up.
+                if (!NotificationsUtils.canUseFullScreenIntent()) {
+                    FormButton(
+                        title = "Full-Screen Alarm",
+                        isFirst = false,
+                        isLast = false,
+                        note = "Off",
+                        withArrow = true,
+                        onClick = {
+                            context.startActivity(
+                                NotificationsUtils.buildFullScreenIntentSettingsIntent()
+                            )
+                        },
+                    )
+                }
+
+                FormButton(
+                    title = state.alarmSnoozeTitle,
+                    isFirst = false,
+                    isLast = true,
+                    note = state.alarmSnoozeNote,
+                    withArrow = true,
+                    onClick = {
+                        navigationFs.push {
+                            TimerSheet(
+                                title = state.alarmSnoozeTitle,
+                                doneTitle = "Done",
+                                initSeconds = maxOf(state.alarmSnoozeSeconds, 60),
+                                hints = listOf(),
+                                onDone = { seconds ->
+                                    vm.setAlarmSnoozeSeconds(seconds)
                                 },
                             )
                         }

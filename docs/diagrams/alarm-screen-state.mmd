@@ -1,0 +1,20 @@
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+
+    Idle --> Armed : producer emits Alarm at finish time
+    Armed --> Ringing : alarm fires and the service starts
+
+    Ringing --> Ringing : reschedule whose list still holds the expired Alarm
+    Ringing --> Idle : new interval or alarm mode off
+    Ringing --> Snoozed : Snooze tapped on notification or alarm screen
+    Ringing --> Recreated : reschedule that stops the service
+
+    Recreated --> Ringing : next reschedule arms it and fires again
+
+    Snoozed --> Ringing : snooze deadline reached
+    Snoozed --> Idle : new interval or timer extended
+
+    note right of Ringing : alarm screen shown only when locked or screen off
+    note right of Recreated : audio released then restarted and the task is cleared
+```

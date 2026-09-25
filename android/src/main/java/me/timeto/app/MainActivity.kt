@@ -26,6 +26,10 @@ import androidx.compose.material.darkColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -43,8 +47,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import me.timeto.app.ui.LifecycleListener
 import me.timeto.app.ui.ZStack
+import me.timeto.app.ui.alarm.AlarmRingScreen
 import me.timeto.app.ui.c
 import me.timeto.app.ui.main.MainScreen
+import me.timeto.app.ui.main.MainTabEnum
+import me.timeto.app.ui.main.mainTabFlow
 import me.timeto.app.ui.navigation.LocalNavigationFs
 import me.timeto.app.ui.navigation.NavigationFs
 import me.timeto.app.ui.pxToDp
@@ -81,6 +88,14 @@ class MainActivity : ComponentActivity() {
 
     private val batteryReceiver = BatteryReceiver()
 
+    /**
+     * The ring's full-screen intent launches this activity, but the platform
+     * leaves it behind the lock screen unless the activity asks to be shown over
+     * it. Held in a flow so onNewIntent can flip it too, when the activity was
+     * already alive and no new instance is created.
+     */
+    private val alarmRingVisibleFlow = MutableStateFlow(false)
+
     private val timeZoneReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             localUtcOffsetSync()
@@ -108,6 +123,9 @@ class MainActivity : ComponentActivity() {
         registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         registerReceiver(timeZoneReceiver, IntentFilter(Intent.ACTION_TIMEZONE_CHANGED))
 
+        if (intent.getBooleanExtra(AlarmRingService.EXTRA_SHOW_ALARM, false))
+            showAlarmRing()
+
         val widgetRawAppAction: String? =
             intent.extras?.getString(MyWidgetOpenApp.key.name)?.takeIf { it.isNotBlank() }
         val widgetAppAction: MyWidgetOpenApp.AppAction? =
@@ -123,6 +141,8 @@ class MainActivity : ComponentActivity() {
         setupWindowInsetsListener()
 
         setContent {
+
+            val isAlarmRingVisible by alarmRingVisibleFlow.collectAsState()
 
             val (vm, state) = rememberVm {
                 AppVm()
@@ -179,6 +199,24 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    // Shown over the app; opening the app must not silence the
+                    // ring, so it closes only on snooze or on starting an activity.
+                    if (isAlarmRingVisible) {
+                        AlarmRingScreen(
+                            onSnooze = {
+                                hideAlarmRing()
+                                AlarmRingService.snooze(
+                                    context = this@MainActivity,
+                                    intervalId = AlarmRingService.ringingIntervalId ?: 0,
+                                )
+                            },
+                            onStart = {
+                                hideAlarmRing()
+                                mainTabFlow.value = MainTabEnum.home
+                            },
+                        )
+                    }
+
                     LaunchedEffect(Unit) {
                         try {
                             AutoBackup.upLastTimeCache(AutoBackupAndroid.getLastTimeOrNull())
@@ -206,7 +244,12 @@ class MainActivity : ComponentActivity() {
                         }
                         // Notifications Schedule
                         NotificationAlarm.flow.onEachExIn(this) { notifications ->
-                            AlarmCenter.cancelAllAlarms()
+                            // The ring keeps playing when the list still holds an
+                            // expired alarm for the interval that is ringing.
+                            AlarmCenter.cancelAllAlarms(
+                                stopRingService = true,
+                                notifications = notifications,
+                            )
                             NotificationsUtils.cleanTimerPushes()
                             notifications.forEach {
                                 AlarmCenter.scheduleNotification(it)
@@ -248,6 +291,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra(AlarmRingService.EXTRA_SHOW_ALARM, false))
+            showAlarmRing()
+    }
+
     override fun onResume() {
         super.onResume()
         NotificationsUtils.cleanTimerPushes()
@@ -277,6 +327,20 @@ class MainActivity : ComponentActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         updateStatusBarHeight()
+    }
+
+    private fun showAlarmRing() {
+        // An alarm has to be visible over the lock screen and wake the display;
+        // the platform launches the intent but does neither on the app's behalf.
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+        alarmRingVisibleFlow.value = true
+    }
+
+    private fun hideAlarmRing() {
+        alarmRingVisibleFlow.value = false
+        setShowWhenLocked(false)
+        setTurnScreenOn(false)
     }
 
     private fun updateStatusBarHeight() {

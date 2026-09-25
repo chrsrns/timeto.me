@@ -5,7 +5,9 @@ import me.timeto.shared.db.ActivityDb
 import me.timeto.shared.db.TaskFolderDb
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class ActivityDbTest {
 
@@ -90,6 +92,7 @@ class ActivityDbTest {
                 pomodoroTimer = 0,
                 timerHints = emptyList(),
                 parentActivityDb = ActivityDb.selectAll().first { it.name == "B" },
+                alarmMode = null,
             )
         }
         assertEquals("Recursive parent activity error", ex.message)
@@ -111,12 +114,28 @@ class ActivityDbTest {
                 pomodoroTimer = 0,
                 timerHints = emptyList(),
                 parentActivityDb = activityDb,
+                alarmMode = null,
             )
         }
         assertEquals("Recursive parent activity error", ex.message)
     }
 
     ///
+
+    @Test
+    fun alarmModeResolved_overrideAndDefault() = runBlocking {
+        initTestDb()
+
+        val inherit = insertActivitySq(id = 1, name = "Inherit", alarmMode = null)
+        assertTrue(inherit.alarmModeResolved(globalDefault = true))
+        assertFalse(inherit.alarmModeResolved(globalDefault = false))
+
+        val enabled = insertActivitySq(id = 2, name = "Enabled", alarmMode = 1)
+        assertTrue(enabled.alarmModeResolved(globalDefault = false))
+
+        val disabled = insertActivitySq(id = 3, name = "Disabled", alarmMode = 0)
+        assertFalse(disabled.alarmModeResolved(globalDefault = true))
+    }
 
     private suspend fun insertActivity(
         name: String,
@@ -134,5 +153,6 @@ class ActivityDbTest {
         timerHints = emptyList(),
         parentActivityDb = parent,
         type = type,
+        alarmMode = null,
     )
 }

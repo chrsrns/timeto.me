@@ -25,6 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class BackupTest {
@@ -175,6 +176,23 @@ class BackupTest {
         Backup.restore(backupJsonWith("version", JsonPrimitive(999)).toString())
 
         assertEquals(before, snapshotAll())
+    }
+
+    @Test
+    fun restore_clearsSnoozeKeys() = runBlocking {
+        initTestDb()
+        seedAllTables()
+        KvDb.KEY.ALARM_SNOOZE_UNTIL.upsertInt(time() + 600)
+        KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.upsertInt(1)
+
+        // The backup was taken mid-snooze, so it carries both keys.
+        val jString = Backup.create("manual")
+        assertTrue(jString.contains(KvDb.KEY.ALARM_SNOOZE_UNTIL.name))
+
+        Backup.restore(jString)
+
+        assertNull(KvDb.KEY.ALARM_SNOOZE_UNTIL.selectOrNull())
+        assertNull(KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.selectOrNull())
     }
 
     @Test

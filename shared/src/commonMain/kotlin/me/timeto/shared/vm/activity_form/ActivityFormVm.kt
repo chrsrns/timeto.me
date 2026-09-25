@@ -13,7 +13,9 @@ import me.timeto.shared.db.ChecklistDb
 import me.timeto.shared.db.ShortcutDb
 import me.timeto.shared.launchExIo
 import me.timeto.shared.textFeatures
+import me.timeto.shared.toBoolean10
 import me.timeto.shared.toHms
+import me.timeto.shared.toInt10
 import me.timeto.shared.toTimerHintNote
 import me.timeto.shared.vm.Vm
 import me.timeto.shared.vm.color_picker.ColorPickerExampleUi
@@ -22,6 +24,15 @@ import me.timeto.shared.vm.color_picker.ColorPickerExamplesUi
 class ActivityFormVm(
     initActivityDb: ActivityDb?,
 ) : Vm<ActivityFormVm.State>() {
+
+    companion object {
+
+        fun alarmModeTitleOf(alarmMode: Boolean?): String = when (alarmMode) {
+            null -> "Inherit"
+            true -> "On"
+            false -> "Off"
+        }
+    }
 
     data class State(
         val initActivityDb: ActivityDb?,
@@ -44,6 +55,7 @@ class ActivityFormVm(
         val timerHints: List<Int>,
         val checklistsDb: List<ChecklistDb>,
         val shortcutsDb: List<ShortcutDb>,
+        val alarmMode: Boolean?,
     ) {
 
         val title: String =
@@ -131,6 +143,11 @@ class ActivityFormVm(
         val colorTitle = "Color"
         val colorPickerTitle = "Activity Color"
 
+        val alarmModeTitle = "Alarm Mode"
+        val alarmModeNote: String = alarmModeTitleOf(alarmMode)
+        val alarmModesUi: List<Boolean?> =
+            listOf(null, true, false)
+
         fun buildColorPickerExamplesUi() = ColorPickerExamplesUi(
             mainExampleUi = ColorPickerExampleUi(
                 title = initActivityDb?.name?.textFeatures()?.textNoFeatures ?: "New Activity",
@@ -206,6 +223,7 @@ class ActivityFormVm(
                 timerHints = initActivityDb?.buildTimerHints() ?: emptyList(),
                 checklistsDb = tf.checklistsDb,
                 shortcutsDb = tf.shortcutsDb,
+                alarmMode = initActivityDb?.alarm_mode?.toBoolean10(),
             )
         )
     }
@@ -286,6 +304,10 @@ class ActivityFormVm(
         state.update { it.copy(shortcutsDb = newShortcutsDb) }
     }
 
+    fun setAlarmMode(newAlarmMode: Boolean?) {
+        state.update { it.copy(alarmMode = newAlarmMode) }
+    }
+
     fun save(
         dialogsManager: DialogsManager,
         onSuccess: (ActivityDb) -> Unit,
@@ -333,6 +355,7 @@ class ActivityFormVm(
                     pomodoroTimer = state.pomodoroTimer,
                     timerHints = state.timerHints,
                     parentActivityDb = state.parentActivityUi?.activityDb,
+                    alarmMode = state.alarmMode?.toInt10(),
                 )
             } else {
                 ActivityDb.insertWithValidation(
@@ -347,6 +370,7 @@ class ActivityFormVm(
                     timerHints = state.timerHints,
                     parentActivityDb = state.parentActivityUi?.activityDb,
                     type = ActivityDb.Type.general,
+                    alarmMode = state.alarmMode?.toInt10(),
                 )
             }
 

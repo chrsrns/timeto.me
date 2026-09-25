@@ -4,8 +4,11 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.media.AudioAttributes
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import me.timeto.shared.NotificationAlarm
 import me.timeto.shared.getSoundTimerExpiredFileName
 
@@ -55,6 +58,34 @@ object NotificationsUtils {
         manager.createNotificationChannel(channel)
         return channel
     }
+
+    /**
+     * IMPORTANCE_HIGH is required for a full-screen intent to launch, and the
+     * channel carries no sound: the ring is played by AlarmRingService, and a
+     * channel sound would play over it.
+     */
+    fun channelAlarmRing(): NotificationChannel {
+        val channel = NotificationChannel("alarm_ring", "Alarm", NotificationManager.IMPORTANCE_HIGH)
+        channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        channel.setSound(null, null)
+        channel.enableVibration(false)
+        manager.createNotificationChannel(channel)
+        return channel
+    }
+
+    /**
+     * Android 14+ turns USE_FULL_SCREEN_INTENT into a special app access that
+     * Play only auto-grants to calling and alarm apps, so the ring must never
+     * depend on it.
+     */
+    fun canUseFullScreenIntent(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+            manager.canUseFullScreenIntent()
+        else true
+
+    fun buildFullScreenIntentSettingsIntent(): Intent =
+        Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT)
+            .setData(Uri.fromParts("package", App.instance.packageName, null))
 
     /**
      * According to documentation only first call affects. Second do nothing.

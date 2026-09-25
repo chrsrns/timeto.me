@@ -84,6 +84,14 @@ object Backup {
             json.mapJsonArray("note_folders") { NoteFolderDb.backupable__restore(it) }
             json.mapJsonArray("notes") { NoteDb.backupable__restore(it) }
             json.mapJsonArray("kv") { KvDb.backupable__restore(it) }
+
+            /**
+             * The snooze deadline rides in the kv table, so a backup taken while
+             * snoozing would pair a stale interval id with whatever interval the
+             * restore brings back. Drop both halves.
+             */
+            db.kVQueries.deleteByKey(KvDb.KEY.ALARM_SNOOZE_UNTIL.name)
+            db.kVQueries.deleteByKey(KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.name)
         }
     }
 

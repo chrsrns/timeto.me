@@ -456,6 +456,26 @@ fun ActivityFormFs(
                     },
                 )
 
+                FormButton(
+                    title = state.alarmModeTitle,
+                    isFirst = false,
+                    isLast = false,
+                    note = state.alarmModeNote,
+                    withArrow = true,
+                    onClick = {
+                        navigationFs.picker(
+                            title = state.alarmModeTitle,
+                            items = buildAlarmModesPickerItems(
+                                alarmModesUi = state.alarmModesUi,
+                                selectedAlarmMode = state.alarmMode,
+                            ),
+                            onDone = { pickerItem ->
+                                vm.setAlarmMode(pickerItem.item)
+                            },
+                        )
+                    },
+                )
+
                 FormSwitch(
                     title = state.keepScreenOnTitle,
                     isEnabled = state.keepScreenOn,
@@ -576,6 +596,19 @@ private fun buildPomodoroPickerItems(
             title = pomodoroItemUi.title,
             isSelected = selectedPomodoroTimer == pomodoroItemUi.timer,
             item = pomodoroItemUi,
+        )
+    }
+}
+
+private fun buildAlarmModesPickerItems(
+    alarmModesUi: List<Boolean?>,
+    selectedAlarmMode: Boolean?,
+): List<NavigationPickerItem<Boolean?>> {
+    return alarmModesUi.map { alarmMode ->
+        NavigationPickerItem(
+            title = ActivityFormVm.alarmModeTitleOf(alarmMode),
+            isSelected = selectedAlarmMode == alarmMode,
+            item = alarmMode,
         )
     }
 }
