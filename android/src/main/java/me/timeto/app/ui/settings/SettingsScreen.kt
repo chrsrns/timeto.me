@@ -651,6 +651,24 @@ fun SettingsScreen(
                     },
                 )
 
+                // Only offer the prompt when the special access is actually missing:
+                // Android 14+ restricts it, and Play only auto-grants it to calling
+                // and alarm apps. Without it the ring degrades to a heads-up.
+                if (!NotificationsUtils.canUseFullScreenIntent()) {
+                    FormButton(
+                        title = "Full-Screen Alarm",
+                        isFirst = false,
+                        isLast = false,
+                        note = "Off",
+                        withArrow = true,
+                        onClick = {
+                            context.startActivity(
+                                NotificationsUtils.buildFullScreenIntentSettingsIntent()
+                            )
+                        },
+                    )
+                }
+
                 FormButton(
                     title = state.alarmSnoozeTitle,
                     isFirst = false,

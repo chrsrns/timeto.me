@@ -1,5 +1,6 @@
 package me.timeto.app
 
+import android.app.KeyguardManager
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
@@ -45,6 +46,9 @@ class AlarmRingService : Service() {
         const val ACTION_STOP = "me.timeto.app.action.ALARM_RING_STOP"
 
         const val EXTRA_INTERVAL_ID = "alarm_ring_interval_id"
+
+        /** Tells MainActivity to open the alarm screen instead of the home tab. */
+        const val EXTRA_SHOW_ALARM = "alarm_ring_show_alarm"
 
         /** Visible for tests and for [AlarmCenter]'s cancel path. */
         @Volatile
@@ -176,12 +180,13 @@ class AlarmRingService : Service() {
     }
 
     private fun buildRingNotification(intervalId: Int): Notification {
-        val channel = NotificationsUtils.channelTimerExpired()
+        val channel = NotificationsUtils.channelAlarmRing()
         val pIntent = PendingIntent.getActivity(
             this,
             NotificationAlarm.REQUEST_CODE_ALARM,
             Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra(EXTRA_SHOW_ALARM, true)
             },
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -191,15 +196,33 @@ class AlarmRingService : Service() {
             buildIntent(this, ACTION_SNOOZE, intervalId),
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        return NotificationCompat.Builder(this, channel.id)
+        val builder = NotificationCompat.Builder(this, channel.id)
             .setSmallIcon(R.drawable.readme_notification_alarm)
             .setColor(0x0055FF)
             .setContentTitle("Time Is Over ⏰")
             .setContentText("Snooze or start a new activity")
             .setOngoing(true)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setContentIntent(pIntent)
             .addAction(0, "Snooze", snoozeIntent)
-            .build()
+
+        /**
+         * Best effort: the full-screen grant is a special app access that Play
+         * only auto-grants to calling and alarm apps, and even when held the
+         * system shows a heads-up while the device is in use.
+         */
+        if (NotificationsUtils.canUseFullScreenIntent() && isScreenLockedOrOff())
+            builder.setFullScreenIntent(pIntent, true)
+
+        return builder.build()
+    }
+
+    private fun isScreenLockedOrOff(): Boolean {
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (!powerManager.isInteractive)
+            return true
+        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        return keyguardManager.isKeyguardLocked
     }
 
     private fun startPlayback() {
