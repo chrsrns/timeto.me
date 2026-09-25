@@ -30,16 +30,12 @@ class AlarmCenterTest {
         // A still-armed ring from an earlier test can fire mid-test and stop the
         // service between its start and its startForeground call, which the
         // system then records as a violation.
-        AlarmCenter.cancelAlarmRing()
-        AlarmRingService.stop(context)
-        AlarmRingServiceTestSupport.awaitNotRunning()
+        AlarmRingServiceTestSupport.stopSafely(context)
     }
 
     @After
     fun tearDown() {
-        AlarmCenter.cancelAlarmRing()
-        AlarmRingService.stop(context)
-        AlarmRingServiceTestSupport.awaitNotRunning()
+        AlarmRingServiceTestSupport.stopSafely(context)
         AlarmRingServiceTestSupport.clearSnoozeKeys()
     }
 
@@ -60,8 +56,10 @@ class AlarmCenterTest {
 
     @Test
     fun armedAlarm_startsTheServiceForTheArmedInterval() {
-        AlarmCenter.scheduleAlarmRing(intervalId = 7, inSeconds = 0)
-        AlarmRingServiceTestSupport.awaitRunning()
+        // A short future delay, not "now": a past trigger time is not consumed
+        // reliably by the alarm service.
+        AlarmCenter.scheduleAlarmRing(intervalId = 7, inSeconds = 1)
+        AlarmRingServiceTestSupport.awaitRunning(timeoutMillis = 15_000)
 
         // The service has to learn the interval from the armed intent, otherwise
         // the cancel predicate can never match it.
@@ -70,8 +68,8 @@ class AlarmCenterTest {
 
     @Test
     fun armedRing_survivesARescheduleWithTheSameExpiredAlarm() {
-        AlarmCenter.scheduleAlarmRing(intervalId = 7, inSeconds = 0)
-        AlarmRingServiceTestSupport.awaitRunning()
+        AlarmCenter.scheduleAlarmRing(intervalId = 7, inSeconds = 1)
+        AlarmRingServiceTestSupport.awaitRunning(timeoutMillis = 15_000)
 
         AlarmCenter.cancelAllAlarms(
             stopRingService = true,

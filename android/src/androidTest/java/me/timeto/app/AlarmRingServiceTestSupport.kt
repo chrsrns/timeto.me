@@ -32,8 +32,8 @@ object AlarmRingServiceTestSupport {
         )
     }
 
-    fun awaitRunning() =
-        await("service never started ringing") { AlarmRingService.isRunning }
+    fun awaitRunning(timeoutMillis: Long = TIMEOUT_MILLIS) =
+        await("service never started ringing", timeoutMillis) { AlarmRingService.isRunning }
 
     fun awaitNotRunning() =
         await("service never stopped ringing") { !AlarmRingService.isRunning }
@@ -66,12 +66,40 @@ object AlarmRingServiceTestSupport {
     fun awaitPreparedAtLeast(count: Int) =
         await("playback never reached the prepared state") { AlarmRingService.preparedCount >= count }
 
+    /**
+     * Stops the ring without racing its start. Stopping a service between
+     * startForegroundService and its startForeground call makes the system record
+     * the start as never satisfied, and the next start then kills the process.
+     * So let an in-flight start settle first, and skip the stop if nothing came up.
+     */
+    fun stopSafely(context: Context) {
+        AlarmCenter.cancelAlarmRing()
+        if (AlarmRingService.isRunning || becameRunningWithin(1_000)) {
+            AlarmRingService.stop(context)
+            awaitNotRunning()
+        }
+    }
+
+    private fun becameRunningWithin(millis: Long): Boolean {
+        val deadline = System.currentTimeMillis() + millis
+        while (System.currentTimeMillis() < deadline) {
+            if (AlarmRingService.isRunning)
+                return true
+            Thread.sleep(20)
+        }
+        return false
+    }
+
     fun awaitSettled() {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
     }
 
-    private fun await(message: String, condition: () -> Boolean) {
-        val deadline = System.currentTimeMillis() + TIMEOUT_MILLIS
+    private fun await(
+        message: String,
+        timeoutMillis: Long = TIMEOUT_MILLIS,
+        condition: () -> Boolean,
+    ) {
+        val deadline = System.currentTimeMillis() + timeoutMillis
         while (System.currentTimeMillis() < deadline) {
             if (condition())
                 return

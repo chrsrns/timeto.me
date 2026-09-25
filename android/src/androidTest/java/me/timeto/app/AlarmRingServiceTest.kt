@@ -29,14 +29,12 @@ class AlarmRingServiceTest {
     @Before
     fun setUp() {
         AlarmRingServiceTestSupport.grantNotificationPermission()
-        AlarmRingService.stop(context)
-        AlarmRingServiceTestSupport.awaitNotRunning()
+        AlarmRingServiceTestSupport.stopSafely(context)
     }
 
     @After
     fun tearDown() {
-        AlarmRingService.stop(context)
-        AlarmRingServiceTestSupport.awaitNotRunning()
+        AlarmRingServiceTestSupport.stopSafely(context)
         manager.cancel(NotificationAlarm.NOTIFICATION_ID_ALARM)
     }
 
