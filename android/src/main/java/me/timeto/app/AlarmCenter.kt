@@ -77,7 +77,7 @@ object AlarmCenter {
 
         armedAlarmIntervalId = intervalId
         val context = App.instance
-        val pIntent = buildAlarmRingPendingIntent(context)
+        val pIntent = buildAlarmRingPendingIntent(context, intervalId)
         val alarm = getAlarmManager()
         val alarmInfo = AlarmManager.AlarmClockInfo(timeMls() + (inSeconds * 1_000L), pIntent)
         alarm.setAlarmClock(alarmInfo, pIntent)
@@ -124,12 +124,24 @@ object AlarmCenter {
         // superseded ring would still fire.
         alarm.cancel(buildAlarmRingPendingIntent(context))
 
-        if (stopRingService && !notifications.hasExpiredAlarmFor(ringingIntervalIdOrNull()))
-            AlarmRingService.stop(context)
+        /**
+         * Only stop a ring that actually reached the foreground. Stopping a
+         * service between startForegroundService and its startForeground call
+         * makes the system record the start as never satisfied, and the next
+         * startForegroundService then kills the process.
+         */
+        if (stopRingService &&
+            AlarmRingService.isRunning &&
+            !notifications.hasExpiredAlarmFor(ringingIntervalIdOrNull())
+        ) AlarmRingService.stop(context)
     }
 
+    /**
+     * A service started without the interval extra reads 0, which is not a valid
+     * interval id. Fall back to the armed record instead of comparing against it.
+     */
     private fun ringingIntervalIdOrNull(): Int? =
-        AlarmRingService.ringingIntervalId ?: armedAlarmIntervalId
+        AlarmRingService.ringingIntervalId?.takeIf { it > 0 } ?: armedAlarmIntervalId
 }
 
 ///
@@ -143,11 +155,19 @@ private fun List<NotificationAlarm>.hasExpiredAlarmFor(intervalId: Int?): Boolea
     }
 }
 
-private fun buildAlarmRingPendingIntent(context: Context): PendingIntent =
+/**
+ * @param intervalId carried so the started service knows which interval is
+ * ringing; extras do not affect PendingIntent identity, so cancelling with no
+ * interval still matches.
+ */
+private fun buildAlarmRingPendingIntent(
+    context: Context,
+    intervalId: Int? = null,
+): PendingIntent =
     PendingIntent.getForegroundService(
         context,
         NotificationAlarm.REQUEST_CODE_ALARM,
-        AlarmRingService.buildIntent(context, AlarmRingService.ACTION_START),
+        AlarmRingService.buildIntent(context, AlarmRingService.ACTION_START, intervalId),
         PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
 

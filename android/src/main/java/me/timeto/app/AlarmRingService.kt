@@ -101,9 +101,19 @@ class AlarmRingService : Service() {
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
 
+    /**
+     * The notification that put this service in the foreground. Reused when a
+     * start has nothing to do, so satisfying the startForeground contract cannot
+     * re-fire the full screen intent.
+     */
+    private var postedNotification: Notification? = null
+    private var postedNotificationIntervalId: Int? = null
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        val intervalId: Int = intent?.getIntExtra(EXTRA_INTERVAL_ID, 0) ?: 0
 
         when (intent?.action) {
             ACTION_STOP -> {
@@ -111,17 +121,22 @@ class AlarmRingService : Service() {
                 return START_NOT_STICKY
             }
             ACTION_SNOOZE -> {
-                snooze(intent.getIntExtra(EXTRA_INTERVAL_ID, 0))
+                ensureForeground(intervalId)
+                snooze(intervalId)
                 return START_NOT_STICKY
             }
         }
 
-        val intervalId: Int = intent?.getIntExtra(EXTRA_INTERVAL_ID, 0) ?: 0
-
-        // V271: a start while already ringing is a no-op, so a reschedule cannot
-        // restart the audio under the user.
-        if (isRunning && ringingIntervalId == intervalId)
+        /**
+         * V271: a start while already ringing is a no-op, so a reschedule cannot
+         * restart the audio under the user. It still has to reach startForeground:
+         * the system kills the process when a startForegroundService delivery does
+         * not, even though this service is already in the foreground.
+         */
+        if (isRunning && ringingIntervalId == intervalId) {
+            ensureForeground(intervalId)
             return START_NOT_STICKY
+        }
 
         startForegroundWithNotification(intervalId)
 
@@ -167,6 +182,8 @@ class AlarmRingService : Service() {
     }
 
     override fun onDestroy() {
+        postedNotification = null
+        postedNotificationIntervalId = null
         releasePlayback()
         isRunning = false
         ringingIntervalId = null
@@ -177,6 +194,20 @@ class AlarmRingService : Service() {
 
     private fun startForegroundWithNotification(intervalId: Int) {
         val notification: Notification = buildRingNotification(intervalId)
+        postedNotification = notification
+        postedNotificationIntervalId = intervalId
+        startForegroundCompat(notification)
+    }
+
+    private fun ensureForeground(intervalId: Int) {
+        val notification = postedNotification
+        if (notification != null && postedNotificationIntervalId == intervalId)
+            startForegroundCompat(notification)
+        else
+            startForegroundWithNotification(intervalId)
+    }
+
+    private fun startForegroundCompat(notification: Notification) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceCompat.startForeground(
                 this,

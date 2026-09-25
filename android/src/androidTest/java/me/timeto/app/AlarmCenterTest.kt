@@ -27,12 +27,17 @@ class AlarmCenterTest {
 
     @Before
     fun setUp() {
+        // A still-armed ring from an earlier test can fire mid-test and stop the
+        // service between its start and its startForeground call, which the
+        // system then records as a violation.
+        AlarmCenter.cancelAlarmRing()
         AlarmRingService.stop(context)
         AlarmRingServiceTestSupport.awaitNotRunning()
     }
 
     @After
     fun tearDown() {
+        AlarmCenter.cancelAlarmRing()
         AlarmRingService.stop(context)
         AlarmRingServiceTestSupport.awaitNotRunning()
         AlarmRingServiceTestSupport.clearSnoozeKeys()
@@ -52,6 +57,30 @@ class AlarmCenterTest {
             IntervalDb(id = 1, time = 0, activityId = 1, note = "deep work"),
         ),
     )
+
+    @Test
+    fun armedAlarm_startsTheServiceForTheArmedInterval() {
+        AlarmCenter.scheduleAlarmRing(intervalId = 7, inSeconds = 0)
+        AlarmRingServiceTestSupport.awaitRunning()
+
+        // The service has to learn the interval from the armed intent, otherwise
+        // the cancel predicate can never match it.
+        assertEquals(7, AlarmRingService.ringingIntervalId)
+    }
+
+    @Test
+    fun armedRing_survivesARescheduleWithTheSameExpiredAlarm() {
+        AlarmCenter.scheduleAlarmRing(intervalId = 7, inSeconds = 0)
+        AlarmRingServiceTestSupport.awaitRunning()
+
+        AlarmCenter.cancelAllAlarms(
+            stopRingService = true,
+            notifications = listOf(alarmNotification(intervalId = 7, inSeconds = 0)),
+        )
+        AlarmRingServiceTestSupport.awaitSettled()
+
+        assertTrue(AlarmRingService.isRunning)
+    }
 
     @Test
     fun cancelAllAlarms_keepsRingingForTheSameExpiredInterval() {
