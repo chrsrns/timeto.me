@@ -1,7 +1,7 @@
 package me.timeto.shared
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -12,7 +12,6 @@ import me.timeto.shared.vm.settings.SettingsVm
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class SettingsVmTest {
 
@@ -26,9 +25,11 @@ class SettingsVmTest {
             assertFalse(vm.state.value.isAlarmModeDefaultEnabled)
 
             vm.setAlarmModeDefaultEnabled(true)
-            awaitKv(key = KvDb.KEY.ALARM_MODE_DEFAULT, expected = "1")
 
-            assertTrue(vm.state.value.isAlarmModeDefaultEnabled)
+            // The KV flow can deliver the initial null after the optimistic update,
+            // so wait for the state the UI actually renders.
+            withTimeout(5_000) { vm.state.first { it.isAlarmModeDefaultEnabled } }
+            assertEquals("1", KvDb.KEY.ALARM_MODE_DEFAULT.selectStringOrNull())
         } finally {
             Dispatchers.resetMain()
         }
@@ -45,19 +46,12 @@ class SettingsVmTest {
             assertEquals("5 min", vm.state.value.alarmSnoozeNote)
 
             vm.setAlarmSnoozeSeconds(600)
-            awaitKv(key = KvDb.KEY.ALARM_SNOOZE_SECONDS, expected = "600")
 
-            assertEquals(600, vm.state.value.alarmSnoozeSeconds)
+            withTimeout(5_000) { vm.state.first { it.alarmSnoozeSeconds == 600 } }
+            assertEquals("600", KvDb.KEY.ALARM_SNOOZE_SECONDS.selectStringOrNull())
             assertEquals("10 min", vm.state.value.alarmSnoozeNote)
         } finally {
             Dispatchers.resetMain()
-        }
-    }
-
-    private suspend fun awaitKv(key: KvDb.KEY, expected: String) {
-        withTimeout(5_000) {
-            while (key.selectStringOrNull() != expected)
-                delay(50)
         }
     }
 }
