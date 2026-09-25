@@ -73,6 +73,9 @@ class AppVmAlarmTriggerTest {
             }
         } finally {
             vm.onDestroy()
+            // `onDestroy` cancels the collectors asynchronously; let them unwind
+            // before the next test builds its own AppVm against a fresh database.
+            delay(500)
         }
     }
 }
