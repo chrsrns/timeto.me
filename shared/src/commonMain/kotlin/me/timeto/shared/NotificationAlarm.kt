@@ -1,5 +1,6 @@
 package me.timeto.shared
 
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import me.timeto.shared.db.IntervalDb
 import me.timeto.shared.db.KvDb
@@ -50,8 +51,19 @@ data class NotificationAlarm(
             else -> requestCode
         }
 
-        // Not StateFlow to reschedule same data object
-        val flow = MutableSharedFlow<List<NotificationAlarm>>()
+        /**
+         * Not StateFlow to reschedule same data object.
+         *
+         * Each emission is a complete snapshot of what should be scheduled, so a
+         * consumer only ever needs the newest one. Buffering with drop-oldest
+         * keeps a slow or wedged consumer from suspending the producer, which
+         * reschedules on every activity write.
+         */
+        val flow = MutableSharedFlow<List<NotificationAlarm>>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
 
         suspend fun rescheduleAll() {
             rescheduleNotifications()
