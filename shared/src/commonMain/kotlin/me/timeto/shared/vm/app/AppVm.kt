@@ -90,6 +90,21 @@ class AppVm : Vm<AppVm.State>() {
                     NotificationAlarm.rescheduleAll()
                 }
 
+            KvDb.KEY.ALARM_MODE_DEFAULT
+                .selectOrNullFlow()
+                .onEachExIn(this) {
+                    NotificationAlarm.rescheduleAll()
+                }
+
+            /**
+             * Table-level: fires on every activity write, including ones that do
+             * not affect alarm mode. Cancellation must therefore be idempotent.
+             */
+            ActivityDb.anyChangeFlow()
+                .onEachExIn(this) {
+                    NotificationAlarm.rescheduleAll()
+                }
+
             DayStartOffsetUtils.buildTodayFlow().onEachExIn(this) { todayWithDayStartOffset ->
                 ChecklistDb.selectAsc().forEach { checklistDb ->
                     checklistDb.resetIfNeeded(todayWithDayStartOffset = todayWithDayStartOffset)
