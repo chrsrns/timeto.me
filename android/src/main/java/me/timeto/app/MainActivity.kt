@@ -88,6 +88,14 @@ class MainActivity : ComponentActivity() {
 
     private val batteryReceiver = BatteryReceiver()
 
+    /**
+     * The ring's full-screen intent launches this activity, but the platform
+     * leaves it behind the lock screen unless the activity asks to be shown over
+     * it. Held in a flow so onNewIntent can flip it too, when the activity was
+     * already alive and no new instance is created.
+     */
+    private val alarmRingVisibleFlow = MutableStateFlow(false)
+
     private val timeZoneReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             localUtcOffsetSync()
@@ -115,6 +123,9 @@ class MainActivity : ComponentActivity() {
         registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         registerReceiver(timeZoneReceiver, IntentFilter(Intent.ACTION_TIMEZONE_CHANGED))
 
+        if (intent.getBooleanExtra(AlarmRingService.EXTRA_SHOW_ALARM, false))
+            showAlarmRing()
+
         val widgetRawAppAction: String? =
             intent.extras?.getString(MyWidgetOpenApp.key.name)?.takeIf { it.isNotBlank() }
         val widgetAppAction: MyWidgetOpenApp.AppAction? =
@@ -131,12 +142,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            // Set when the ring's full-screen intent or its notification opens
-            // the app; the overlay then sits on top until the user snoozes or
-            // starts a new activity.
-            var isAlarmRingVisible by remember {
-                mutableStateOf(intent.getBooleanExtra(AlarmRingService.EXTRA_SHOW_ALARM, false))
-            }
+            val isAlarmRingVisible by alarmRingVisibleFlow.collectAsState()
 
             val (vm, state) = rememberVm {
                 AppVm()
@@ -198,14 +204,14 @@ class MainActivity : ComponentActivity() {
                     if (isAlarmRingVisible) {
                         AlarmRingScreen(
                             onSnooze = {
-                                isAlarmRingVisible = false
+                                hideAlarmRing()
                                 AlarmRingService.snooze(
                                     context = this@MainActivity,
                                     intervalId = AlarmRingService.ringingIntervalId ?: 0,
                                 )
                             },
                             onStart = {
-                                isAlarmRingVisible = false
+                                hideAlarmRing()
                                 mainTabFlow.value = MainTabEnum.home
                             },
                         )
@@ -285,6 +291,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra(AlarmRingService.EXTRA_SHOW_ALARM, false))
+            showAlarmRing()
+    }
+
     override fun onResume() {
         super.onResume()
         NotificationsUtils.cleanTimerPushes()
@@ -314,6 +327,20 @@ class MainActivity : ComponentActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         updateStatusBarHeight()
+    }
+
+    private fun showAlarmRing() {
+        // An alarm has to be visible over the lock screen and wake the display;
+        // the platform launches the intent but does neither on the app's behalf.
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+        alarmRingVisibleFlow.value = true
+    }
+
+    private fun hideAlarmRing() {
+        alarmRingVisibleFlow.value = false
+        setShowWhenLocked(false)
+        setTurnScreenOn(false)
     }
 
     private fun updateStatusBarHeight() {
