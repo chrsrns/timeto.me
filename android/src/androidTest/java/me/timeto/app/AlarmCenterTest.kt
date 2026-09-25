@@ -45,8 +45,10 @@ class AlarmCenterTest {
         text = "text",
         inSeconds = inSeconds,
         type = NotificationAlarm.Type.Alarm(intervalId = intervalId),
+        // A null note makes LiveActivity resolve the activity name through the
+        // cache, which throws when the test database has no such activity.
         liveActivity = LiveActivity(
-            IntervalDb(id = 1, time = 0, activityId = 1, note = null),
+            IntervalDb(id = 1, time = 0, activityId = 1, note = "deep work"),
         ),
     )
 

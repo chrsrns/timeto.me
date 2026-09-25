@@ -31,6 +31,7 @@ class AlarmNotificationTest {
 
     @Before
     fun setUp() {
+        AlarmRingServiceTestSupport.grantNotificationPermission()
         AlarmRingService.stop(context)
         AlarmRingServiceTestSupport.awaitNotRunning()
         manager.cancel(NotificationAlarm.NOTIFICATION_ID_ALARM)
@@ -46,11 +47,7 @@ class AlarmNotificationTest {
     private fun ringNotification(): Notification {
         AlarmRingService.start(context, intervalId = 7)
         AlarmRingServiceTestSupport.awaitRunning()
-        val posted = manager.activeNotifications.firstOrNull {
-            it.id == NotificationAlarm.NOTIFICATION_ID_ALARM
-        }
-        assertNotNull("the ring must post a notification", posted)
-        return posted!!.notification
+        return AlarmRingServiceTestSupport.awaitNotification(NotificationAlarm.NOTIFICATION_ID_ALARM)
     }
 
     @Test

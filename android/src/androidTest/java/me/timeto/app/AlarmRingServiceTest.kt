@@ -28,6 +28,7 @@ class AlarmRingServiceTest {
 
     @Before
     fun setUp() {
+        AlarmRingServiceTestSupport.grantNotificationPermission()
         AlarmRingService.stop(context)
         AlarmRingServiceTestSupport.awaitNotRunning()
     }
@@ -40,25 +41,32 @@ class AlarmRingServiceTest {
     }
 
     @Test
-    fun start_ringsAndPostsTheAlarmNotification() {
+    fun start_rings_preparesAudio_andPostsTheAlarmNotification() {
+        val preparedBefore = AlarmRingService.preparedCount
+        val errorsBefore = AlarmRingService.prepareErrorCount
+
         AlarmRingService.start(context, intervalId = 7)
         AlarmRingServiceTestSupport.awaitRunning()
+        // The asset has to actually load: prepareAsync reports failure later, so a
+        // silent ring would otherwise look identical to a working one.
+        AlarmRingServiceTestSupport.awaitPreparedAtLeast(preparedBefore + 1)
 
         assertTrue(AlarmRingService.isRunning)
         assertEquals(7, AlarmRingService.ringingIntervalId)
         assertNotNull(
-            "expected a notification on the alarm id",
-            manager.activeNotifications.firstOrNull {
-                it.id == NotificationAlarm.NOTIFICATION_ID_ALARM
-            },
+            AlarmRingServiceTestSupport.awaitNotification(NotificationAlarm.NOTIFICATION_ID_ALARM),
         )
+        assertEquals(errorsBefore, AlarmRingService.prepareErrorCount)
     }
 
     @Test
     fun startWhileRinging_isANoOp() {
+        // prepareCount is process-wide and never reset, so compare deltas.
+        val preparesBefore = AlarmRingService.prepareCount
         AlarmRingService.start(context, intervalId = 7)
         AlarmRingServiceTestSupport.awaitRunning()
         val preparesAfterFirstStart = AlarmRingService.prepareCount
+        assertEquals(preparesBefore + 1, preparesAfterFirstStart)
 
         AlarmRingService.start(context, intervalId = 7)
         AlarmRingServiceTestSupport.awaitSettled()
