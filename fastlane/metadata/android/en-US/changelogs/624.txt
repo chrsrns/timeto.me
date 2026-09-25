@@ -1,0 +1,7 @@
+26 September 2026:
+
+1. Alarm Mode
+A timer can now end with a real alarm instead of a single notification. The alarm rings and vibrates until you snooze it or start a new activity. Snooze Duration is set in Settings, and Alarm Mode can be enabled for all activities or per activity.
+
+2. Repeat Expired Timer
+The expired timer notification can repeat at a chosen interval until you start a new activity. Set it in Settings.
