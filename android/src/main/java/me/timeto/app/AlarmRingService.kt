@@ -64,6 +64,15 @@ class AlarmRingService : Service() {
         internal var prepareCount: Int = 0
             private set
 
+        /** Test seam: preparation is asynchronous, so success is observed here. */
+        @Volatile
+        internal var preparedCount: Int = 0
+            private set
+
+        @Volatile
+        internal var prepareErrorCount: Int = 0
+            private set
+
         fun buildIntent(
             context: Context,
             action: String,
@@ -120,10 +129,11 @@ class AlarmRingService : Service() {
             releasePlayback()
 
         ringingIntervalId = intervalId
-        isRunning = true
-
         startPlayback()
         startVibration()
+        // Set last: a caller that observes isRunning then knows playback was
+        // already started, so it cannot race the prepare.
+        isRunning = true
 
         return START_NOT_STICKY
     }
@@ -227,7 +237,9 @@ class AlarmRingService : Service() {
 
     private fun startPlayback() {
         try {
-            val soundName: String = getSoundTimerExpiredFileName(withExtension = true)
+            // No extension: a raw resource is addressed by its name, and
+            // `android.resource://<pkg>/raw/<name>.mp3` resolves to nothing.
+            val soundName: String = getSoundTimerExpiredFileName(withExtension = false)
             val player = MediaPlayer()
             player.setDataSource(
                 this,
@@ -241,11 +253,22 @@ class AlarmRingService : Service() {
             )
             player.isLooping = true
             player.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK)
-            player.setOnPreparedListener { it.start() }
+            player.setOnPreparedListener {
+                preparedCount += 1
+                it.start()
+            }
+            player.setOnErrorListener { _, what, extra ->
+                // Preparation is asynchronous, so a failure here has no caller to
+                // throw at; report it rather than leaving a silent ring.
+                prepareErrorCount += 1
+                reportApi("AlarmRingService.startPlayback() error $what $extra")
+                true
+            }
             player.prepareAsync()
             mediaPlayer = player
             prepareCount += 1
         } catch (e: Throwable) {
+            prepareErrorCount += 1
             reportApi("AlarmRingService.startPlayback():$e")
         }
     }
