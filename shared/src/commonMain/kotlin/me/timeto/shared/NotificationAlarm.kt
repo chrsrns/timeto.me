@@ -143,18 +143,26 @@ private suspend fun rescheduleNotifications() {
         if (!isAlarmMode) null else timerType as? IntervalDb.TimerType.Timer
     }
 
-    if (alarmTimerType != null) {
-        /**
-         * A snooze deadline survives reschedules, but only while it still belongs
-         * to the running interval and that interval is still expired. Otherwise a
-         * stale deadline could ring a timer that has since been restarted.
-         */
-        val snoozeUntil: Int = KvDb.KEY.ALARM_SNOOZE_UNTIL.selectOrNull().asAlarmSnoozeUntil()
-        val isSnoozeActive: Boolean =
-            KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.selectOrNull().asAlarmSnoozeIntervalId() == lastIntervalDb.id &&
-                    snoozeUntil > now &&
-                    alarmTimerType.isFinished(now)
+    /**
+     * A snooze deadline survives reschedules, but only while it still belongs to
+     * the running interval and that interval is still expired. Otherwise a stale
+     * deadline could ring a timer that has since been restarted, so it is dropped
+     * here rather than left for a later reschedule to pick up.
+     */
+    val snoozeUntil: Int = KvDb.KEY.ALARM_SNOOZE_UNTIL.selectOrNull().asAlarmSnoozeUntil()
+    val snoozeIntervalId: Int? = KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.selectOrNull().asAlarmSnoozeIntervalId()
+    val isSnoozeActive: Boolean =
+        (alarmTimerType != null) &&
+                (snoozeIntervalId == lastIntervalDb.id) &&
+                (snoozeUntil > now) &&
+                alarmTimerType.isFinished(now)
 
+    if ((snoozeIntervalId != null) && !isSnoozeActive) {
+        KvDb.KEY.ALARM_SNOOZE_UNTIL.delete()
+        KvDb.KEY.ALARM_SNOOZE_INTERVAL_ID.delete()
+    }
+
+    if (alarmTimerType != null) {
         notifications.add(
             NotificationAlarm(
                 title = "Time Is Over ⏰",
